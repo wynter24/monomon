@@ -35,7 +35,15 @@ const eslintConfig = [
     rules: {
       "prettier/prettier": "error",
       "no-unused-vars": "off",
-      "@typescript-eslint/no-unused-vars": "error",
+      "@typescript-eslint/no-unused-vars": [
+        "error",
+        {
+          "vars": "all",
+          "varsIgnorePattern": "^_",
+          "args": "after-used",
+          "argsIgnorePattern": "^_"
+        }
+      ],
     },
     settings: {
       "import/resolver": {
@@ -44,7 +52,7 @@ const eslintConfig = [
     },
   },
   {
-    files: ["**/*.test.{js,jsx,ts,tsx}", "**/*.stories.{js,jsx,ts,tsx}"],
+    files: ["**/*.test.{js,jsx,ts,tsx}"],
     rules: {
       "no-unused-vars": "off",
       "no-console": "off",

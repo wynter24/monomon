@@ -1,0 +1,45 @@
+# Dependencies
+node_modules/
+
+# Build outputs
+.next/
+dist/
+build/
+
+# Environment files
+.env*
+
+# Coverage
+coverage/
+
+# Editor files
+.vscode/
+.idea/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Package manager files
+yarn.lock
+package-lock.json
+.pnp.*
+.yarn/
+
+# TypeScript declaration files
+next-env.d.ts
+*.d.ts
+
+# Configuration files
+next.config.js
+next.config.ts
+postcss.config.js
+tailwind.config.js
+jest.config.js
+
+# Documentation
+README.md
+*.md
+
+# Node version
+.nvmrc
