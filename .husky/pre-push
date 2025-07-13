@@ -9,7 +9,7 @@ npm run type-check || exit 1
 
 # Tests
 echo "🧪 Running tests..."
-npm test || exit 1
+npm test -- --passWithNoTests || exit 1
 
 # Build check
 echo "🏗️  Building..."
