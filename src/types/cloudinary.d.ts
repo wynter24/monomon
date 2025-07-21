@@ -3,6 +3,7 @@ export {};
 declare global {
   interface CloudinaryUploadResultInfo {
     public_id: string;
+    secure_url: string;
   }
 
   interface CloudinaryUploadResult {

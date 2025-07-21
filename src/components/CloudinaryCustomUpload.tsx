@@ -3,7 +3,7 @@ import { useEffect } from 'react';
 
 interface Props {
   /** 업로드 후 public_id를 부모로 전달 */
-  onUploadSuccess?: (publicId: string) => void;
+  onUploadSuccess?: (result: CloudinaryUploadResult) => void;
 }
 
 export default function CloudinaryCustomUpload({ onUploadSuccess }: Props) {
@@ -58,8 +58,8 @@ export default function CloudinaryCustomUpload({ onUploadSuccess }: Props) {
       },
       (err, result) => {
         if (!err && result.event === 'success') {
-          console.log('✅ 업로드 완료:', result.info.public_id);
-          onUploadSuccess?.(result.info.public_id);
+          console.log('✅ 업로드 완료:', result);
+          onUploadSuccess?.(result);
         }
       },
     );

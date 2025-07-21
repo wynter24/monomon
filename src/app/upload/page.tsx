@@ -6,6 +6,25 @@ import CloudinaryCustomUpload from '@/components/CloudinaryCustomUpload';
 export default function UploadPage() {
   const [publicId, setPublicId] = useState<string | null>(null);
 
+  async function matchWithCloudinaryURL(imageUrl: string) {
+    const formData = new FormData();
+    formData.append('image_url', imageUrl);
+
+    const res = await fetch(
+      'https://wynter24-pokemon-face-match.hf.space/match',
+      {
+        method: 'POST',
+        body: formData,
+      },
+    );
+
+    const data = await res.json();
+    console.log('API 결과:', data);
+
+    // 예: { matched_pokemon_name: "Pikachu", matched_pokemon_image: "https://..." }
+    return data;
+  }
+
   return (
     <div className="container mx-auto p-4">
       <h1 className="mb-4 text-2xl font-bold">Upload Photo</h1>
@@ -22,9 +41,14 @@ export default function UploadPage() {
 
       {/* 업로드 버튼 */}
       <CloudinaryCustomUpload
-        onUploadSuccess={(pid) => {
-          setPublicId(pid);
+        onUploadSuccess={(result: CloudinaryUploadResult) => {
+          setPublicId(result.info.public_id);
           // TODO: DeepFace API 호출
+          const secureUrl = result.info.secure_url; // ✅ Cloudinary가 반환하는 URL
+          console.log('업로드된 Cloudinary URL:', secureUrl);
+
+          // Cloudinary URL로 바로 Spaces API 호출
+          matchWithCloudinaryURL(secureUrl);
         }}
       />
     </div>
