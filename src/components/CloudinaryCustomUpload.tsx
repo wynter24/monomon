@@ -68,7 +68,7 @@ export default function CloudinaryCustomUpload({ onUploadSuccess }: Props) {
   return (
     <button
       onClick={showUploadWidget}
-      className="rounded bg-yellow-400 px-4 py-2 font-bold text-black hover:bg-yellow-500"
+      className="rounded bg-yellow-400 px-4 py-2 text-black hover:bg-yellow-500"
     >
       Take a photo or upload
     </button>
