@@ -13,7 +13,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className="font-sans">{children}</body>
+      <body className="h-full min-h-screen bg-white text-black">
+        <main className="mx-auto w-full max-w-4xl px-4">{children}</main>
+      </body>
     </html>
   );
 }
