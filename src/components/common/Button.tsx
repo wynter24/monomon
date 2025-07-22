@@ -19,7 +19,7 @@ export default function Button({
 
   const sizeClass = BUTTON_SIZE[size];
   const baseClasses =
-    'rounded-2xl py-2 text-black cursor-pointer shadow-[0_4px_6px_rgba(0,0,0,0.1)] transition hover:shadow-[0_6px_8px_rgba(0,0,0,0.12)]';
+    'rounded-2xl py-2 text-black cursor-pointer shadow-[0_4px_6px_rgba(0,0,0,0.1)] transition hover:shadow-[0_6px_8px_rgba(0,0,0,0.12)] disabled:hover:shadow-[0_4px_6px_rgba(0,0,0,0.1)]';
   const variantClasses = disabled
     ? VARIANT_COLOR['disabled']
     : VARIANT_COLOR[variants];
