@@ -1,12 +1,13 @@
 'use client';
 import { useEffect } from 'react';
+import Button from './common/Button';
 
 interface Props {
   /** 업로드 후 public_id를 부모로 전달 */
   onUploadSuccess?: (result: CloudinaryUploadResult) => void;
 }
 
-export default function CloudinaryCustomUpload({ onUploadSuccess }: Props) {
+export default function UploadButton({ onUploadSuccess }: Props) {
   useEffect(() => {
     // Cloudinary 위젯 스크립트가 없으면 로드
     if (!window.cloudinary) {
@@ -66,11 +67,11 @@ export default function CloudinaryCustomUpload({ onUploadSuccess }: Props) {
   };
 
   return (
-    <button
+    <Button
+      size="md"
+      text="Take a photo or upload"
       onClick={showUploadWidget}
-      className="rounded bg-yellow-400 px-4 py-2 text-black hover:bg-yellow-500"
-    >
-      Take a photo or upload
-    </button>
+      className="md:w-full"
+    />
   );
 }
