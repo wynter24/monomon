@@ -1,15 +1,19 @@
 'use client';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import UploadButton from '@/components/UploadButton';
 import Button from '@/components/common/Button';
 import UploadPreview from '@/components/UploadPreview';
-import { useRouter } from 'next/router';
 import { useMatchStore } from '@/store/useMatchStore';
+import { useRouter } from 'next/navigation';
 
 export default function UploadPage() {
   const [publicId, setPublicId] = useState<string | null>(null);
   const router = useRouter();
-  const { setImgUrl } = useMatchStore();
+  const { setImgUrl, setEtag, clearMatch } = useMatchStore();
+
+  useEffect(() => {
+    clearMatch();
+  }, []);
 
   return (
     <div className="container mx-auto p-4">
@@ -24,6 +28,7 @@ export default function UploadPage() {
             onUploadSuccess={(result: CloudinaryUploadResult) => {
               setPublicId(result.info.public_id);
               setImgUrl(result.info.secure_url);
+              setEtag(result.info.etag);
             }}
           />
           <Button
