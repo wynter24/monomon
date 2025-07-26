@@ -26,6 +26,9 @@ export default function UploadButton({ onUploadSuccess }: Props) {
       {
         cloudName: 'dfgfeq4up',
         uploadPreset: 'monomon',
+        // TODO: 로그인 기능 추가 후, signed upload로 변경 -> 중복 업로드 방지 옵션 적용
+        // unique_filename: false, // 같은 이름/같은 이미지면 새로 안 만듦
+        // overwrite: false, // 기존 파일이 있으면 덮어쓰기 안 함
         sources: ['local', 'camera', 'google_drive', 'dropbox', 'url'],
         // NOTE: 크롭 모드 활성화 시 크롭 후 바로 업로드
         // TODO: 파일 선택만 하고 직접 커스텀 크롭 모드 구현

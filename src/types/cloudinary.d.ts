@@ -20,6 +20,8 @@ declare global {
   interface CloudinaryWidgetOptions {
     cloudName: string;
     uploadPreset: string;
+    // unique_filename: boolean;
+    // overwrite: boolean;
     sources?: string[];
     multiple?: boolean;
     cropping?: boolean;

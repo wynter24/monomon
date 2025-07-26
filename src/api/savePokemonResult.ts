@@ -1,6 +1,14 @@
 import { supabase } from '@/lib/supabaseClient';
 import type { MatchResult } from '@/store/useMatchStore';
 
+type PokemonResultRow = {
+  id: string;
+  result: MatchResult;
+  image_hash: string;
+  user_id: string | null;
+  image_url: string | null;
+};
+
 export async function savePokemonResult(
   imageUrl: string,
   etag: string,
@@ -13,14 +21,16 @@ export async function savePokemonResult(
     .from('pokemon_results')
     .select('id, result')
     .eq('image_hash', imageHash)
-    .maybeSingle();
+    .maybeSingle<Pick<PokemonResultRow, 'id' | 'result'>>();
 
   if (selectError) {
-    console.error('DB 조회 실패:', selectError.message);
+    if (process.env.NODE_ENV === 'development') {
+      console.error('DB 조회 실패:', selectError.message);
+    }
   }
 
   if (existing) {
-    console.log('✅ 이미 저장된 결과, insert 생략');
+    // console.log('✅ 이미 저장된 결과, insert 생략');
     return existing.result; // 기존 결과 그대로 반환
   }
 
@@ -35,11 +45,18 @@ export async function savePokemonResult(
     },
   ]);
 
+  // unique constraint 중복이면 무시
   if (insertError) {
-    console.error('DB 저장 실패:', insertError.message);
-    throw insertError;
+    if (insertError.code === '23505') {
+      // console.warn('이미 저장된 데이터(중복 insert 방지됨)');
+      return matchResult;
+    } else {
+      if (process.env.NODE_ENV === 'development') {
+        console.error('DB 저장 실패:', insertError.message);
+      }
+    }
   }
 
-  console.log('✅ 새 결과 저장 완료');
+  // console.log('✅ 새 결과 저장 완료');
   return matchResult;
 }
