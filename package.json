@@ -6,14 +6,14 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint",
+    "lint": "eslint .",
     "test": "jest --passWithNoTests",
     "type-check": "tsc --noEmit",
     "prepare": "husky install"
   },
   "lint-staged": {
     "*.{js,jsx,ts,tsx}": [
-      "eslint --fix",
+      "eslint --config eslint.config.mjs --fix",
       "prettier --write"
     ],
     "*.{json,md}": [
