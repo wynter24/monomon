@@ -13,8 +13,15 @@ export default function UploadPreview({
   return (
     <>
       {publicId ? (
-        <div className="mt-4">
-          <CldImage src={publicId} width={270} height={180} alt="Uploaded" />
+        <div className="w-full max-w-sm sm:max-w-md md:max-w-lg lg:max-w-xl">
+          <CldImage
+            src={publicId}
+            width={0}
+            height={0}
+            sizes="100vw"
+            className="h-auto w-full rounded-md"
+            alt="Uploaded"
+          />
         </div>
       ) : (
         <div
