@@ -14,6 +14,7 @@ export default function UploadPage() {
 
   useEffect(() => {
     clearMatch();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
