@@ -5,13 +5,14 @@ import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
 import Image from 'next/image';
 import { toast } from 'sonner';
+import { savePokemonResult } from '@/api/savePokemonResult';
 
 export default function LoadingPage() {
   const router = useRouter();
-  const { uploadedImgUrl, setMatchResult } = useMatchStore();
+  const { uploadedImgUrl, etag } = useMatchStore();
 
   useEffect(() => {
-    if (!uploadedImgUrl) {
+    if (!uploadedImgUrl || !etag) {
       requestAnimationFrame(() => {
         toast.error('No photo uploaded. Please try again.');
         router.replace('/upload');
@@ -22,8 +23,8 @@ export default function LoadingPage() {
     const runMatch = async () => {
       try {
         const data = await matchPokemon(uploadedImgUrl); // 분석
-        setMatchResult(data); // 전역에 저장
-        router.replace('/result');
+        const { id } = await savePokemonResult(etag, data); // 저장
+        router.replace(`/result/${id}`);
       } catch {
         toast.error('Failed to find a match. Please try again.');
         router.replace('/upload');
@@ -31,7 +32,7 @@ export default function LoadingPage() {
     };
 
     runMatch();
-  }, [uploadedImgUrl, router, setMatchResult]);
+  }, [uploadedImgUrl, etag, router]);
 
   return (
     <div className="flex h-screen flex-col items-center justify-center gap-8">
