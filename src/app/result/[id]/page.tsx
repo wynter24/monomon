@@ -10,17 +10,17 @@ export async function generateMetadata({ params }: { params: Params }) {
 
   if (!result) {
     return {
-      title: '결과를 찾을 수 없습니다',
-      description: '결과가 존재하지 않아요.',
+      title: 'No Result Available',
+      description: 'Sorry, we couldn’t find the result you’re looking for.',
     };
   }
 
   return {
-    title: `나와 닮은 포켓몬은 ${result.matched_pokemon_name}!`,
-    description: `유사도 ${(result.similarity_score * 100).toFixed(2)}%`,
+    title: `My Pokémon look-alike is ${result.matched_pokemon_name}!`,
+    description: `Similarity Score ${(result.similarity_score * 100).toFixed(2)}%`,
     openGraph: {
-      title: `나와 닮은 포켓몬은 ${result.matched_pokemon_name}!`,
-      description: `유사도 ${(result.similarity_score * 100).toFixed(2)}%`,
+      title: `My Pokémon look-alike is ${result.matched_pokemon_name}!`,
+      description: `Similarity Score ${(result.similarity_score * 100).toFixed(2)}%`,
       images: [
         {
           url: result.matched_pokemon_image,
@@ -32,8 +32,8 @@ export async function generateMetadata({ params }: { params: Params }) {
     },
     twitter: {
       card: 'summary_large_image',
-      title: `나와 닮은 포켓몬은 ${result.matched_pokemon_name}!`,
-      description: `유사도 ${(result.similarity_score * 100).toFixed(2)}%`,
+      title: `My Pokémon look-alike is ${result.matched_pokemon_name}!`,
+      description: `Similarity Score ${(result.similarity_score * 100).toFixed(2)}%`,
       images: [result.matched_pokemon_image],
     },
   };
