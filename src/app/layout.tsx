@@ -3,8 +3,21 @@ import './globals.css';
 import { Toaster } from 'sonner';
 
 export const metadata: Metadata = {
+  metadataBase: new URL('https://monomon.vercel.app/'),
   title: 'monmon',
   description: 'Find your Pokémon twin with Monomon',
+  openGraph: {
+    title: 'monmon',
+    description: 'Find your Pokémon twin with Monomon',
+    images: [
+      {
+        url: '/images/og-image.png',
+        width: 400,
+        height: 400,
+        alt: 'monomon og-image',
+      },
+    ],
+  },
 };
 
 export default function RootLayout({
