@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import './globals.css';
 import { Toaster } from 'sonner';
+import QueryProvider from '@/lib/queryProvider';
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://monomon.vercel.app/'),
@@ -28,8 +29,10 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className="h-full min-h-screen bg-white text-black">
-        <main className="mx-auto w-full max-w-4xl px-4">{children}</main>
-        <Toaster position="top-center" richColors />
+        <QueryProvider>
+          <main className="mx-auto w-full max-w-4xl px-4">{children}</main>
+          <Toaster position="top-center" richColors />
+        </QueryProvider>
       </body>
     </html>
   );

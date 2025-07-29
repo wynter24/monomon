@@ -1,35 +1,31 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { useEffect } from 'react';
 import Button from '../common/Button';
 import SkeletonImage from '../common/SkeletonImage';
-import { useState } from 'react';
-import { fetchResultFromSupabase } from '@/lib/supabaseClient';
-import { MatchResult } from '@/types/pokemon';
 import { toast } from 'sonner';
+import { useResultQuery } from '@/hooks/useResultQuery';
 
 type ResultClientProps = {
   id: string;
 };
 
 export default function ResultClient({ id }: ResultClientProps) {
-  const [result, setResult] = useState<MatchResult | null>(null);
+  const { data: result, isLoading, isError } = useResultQuery(id);
   const router = useRouter();
 
-  useEffect(() => {
-    const getResult = async () => {
-      try {
-        const response = await fetchResultFromSupabase(id);
-        setResult(response);
-      } catch {
-        toast.error('Failed to load. Please try again.');
-      }
-    };
-    getResult();
-  }, [id]);
+  if (isLoading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center p-4 lg:text-lg">
+        <p>Loading result...</p>
+      </div>
+    );
+  }
 
-  if (!result) return <p>No results found.</p>;
+  if (isError || !result) {
+    toast.error('Failed to load. Please try again.');
+    return <p>No results found.</p>;
+  }
 
   return (
     <div className="flex min-h-screen items-center justify-center p-4">
