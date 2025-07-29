@@ -1,19 +1,18 @@
 'use client';
 
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { useEffect } from 'react';
-import Button from '../common/Button';
-import SkeletonImage from '../common/SkeletonImage';
-import { useState } from 'react';
 import { fetchResultFromSupabase } from '@/lib/supabaseClient';
 import { MatchResult } from '@/types/pokemon';
+import SkeletonImage from '../common/SkeletonImage';
+import Button from '../common/Button';
 import { toast } from 'sonner';
 
-type ResultClientProps = {
+type SharedResultClientProps = {
   id: string;
 };
 
-export default function ResultClient({ id }: ResultClientProps) {
+export default function SharedResultClient({ id }: SharedResultClientProps) {
   const [result, setResult] = useState<MatchResult | null>(null);
   const router = useRouter();
 
@@ -54,28 +53,10 @@ export default function ResultClient({ id }: ResultClientProps) {
           </div>
         </div>
 
-        <div className="flex w-full max-w-xs flex-col items-center gap-3">
+        <div className="w-full max-w-xs">
           <Button
-            size={'lg'}
-            text={'Share your result'}
-            variants="active"
-            onClick={() => {
-              const shareUrl = `${window.location.origin}/result/${id}/share`;
-              if (navigator.share) {
-                navigator.share({
-                  title: `My Pokémon look-alike is ${result.matched_pokemon_name}!`,
-                  text: `I'm ${(result.similarity_score * 100).toFixed(2)}% similar to ${result.matched_pokemon_name}!`,
-                  url: shareUrl,
-                });
-              } else {
-                navigator.clipboard.writeText(shareUrl);
-                alert('Link copied to clipboard!');
-              }
-            }}
-          />
-          <Button
-            size={'lg'}
-            text={'Try Again'}
+            size="lg"
+            text="Find your Pokémon twin"
             variants="active"
             onClick={() => {
               router.push('/upload');
