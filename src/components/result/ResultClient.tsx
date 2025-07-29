@@ -2,8 +2,8 @@
 
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
-import Image from 'next/image';
 import Button from '../common/Button';
+import SkeletonImage from '../common/SkeletonImage';
 import { useState } from 'react';
 import { fetchResultFromSupabase } from '@/lib/supabaseClient';
 import { MatchResult } from '@/types/pokemon';
@@ -30,7 +30,7 @@ export default function ResultClient({ id }: ResultClientProps) {
     getResult();
   }, [id]);
 
-  if (!result) return <p>결과가 없습니다.</p>;
+  if (!result) return <p>No results found.</p>;
 
   // const test = {
   //   similarity_score: 0.8951477862704721,
@@ -50,20 +50,21 @@ export default function ResultClient({ id }: ResultClientProps) {
             width={190}
             height={190}
           /> */}
-          <Image
+          <SkeletonImage
             src={result.matched_pokemon_image}
             alt="matched_pokemon_image"
-            width={0}
-            height={0}
-            sizes="100vw"
-            className="h-auto min-h-[190px] w-full min-w-[190px] rounded-md"
+            width={400}
+            height={400}
+            className="min-h-[190px] min-w-[190px]"
+            priority={true}
+            loadingText="Loading Pokémon..."
           />
           <div className="text-center">
             <h2 className="text-2xl font-semibold capitalize">
               {result?.matched_pokemon_name}
             </h2>
             <p className="mt-2 text-lg text-gray-600">
-              유사도 점수: {(result.similarity_score * 100).toFixed(2)}%
+              Similarity Score: {(result.similarity_score * 100).toFixed(2)}%
             </p>
           </div>
         </div>
@@ -76,13 +77,13 @@ export default function ResultClient({ id }: ResultClientProps) {
             onClick={() => {
               if (navigator.share) {
                 navigator.share({
-                  title: `나와 닮은 포켓몬은 ${result.matched_pokemon_name}!`,
-                  text: `나는 ${result.matched_pokemon_name}과 ${(result.similarity_score * 100).toFixed(2)}% 닮았어요!`,
+                  title: `My Pokémon look-alike is ${result.matched_pokemon_name}!`,
+                  text: `I'm ${(result.similarity_score * 100).toFixed(2)}% similar to ${result.matched_pokemon_name}!`,
                   url: window.location.href,
                 });
               } else {
                 navigator.clipboard.writeText(window.location.href);
-                alert('링크가 복사되었습니다!');
+                alert('Link copied to clipboard!');
               }
             }}
           />

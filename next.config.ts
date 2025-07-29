@@ -13,6 +13,8 @@ const nextConfig: NextConfig = {
         pathname: "/**",
       },
     ],
+    unoptimized: false,
+    formats: ['image/webp', 'image/avif'],
   },
 };
 

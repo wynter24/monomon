@@ -1,5 +1,5 @@
-import { CldImage } from 'next-cloudinary';
 import Image from 'next/image';
+import SkeletonImage from './common/SkeletonImage';
 
 type UploadProps = {
   publicId: string | null;
@@ -14,13 +14,15 @@ export default function UploadPreview({
     <>
       {publicId ? (
         <div className="w-full max-w-sm sm:max-w-md md:max-w-lg lg:max-w-xl">
-          <CldImage
+          <SkeletonImage
             src={publicId}
-            width={0}
-            height={0}
-            sizes="100vw"
-            className="h-auto w-full rounded-md"
             alt="Uploaded"
+            width={400}
+            height={400}
+            className="max-h-96"
+            priority={true}
+            loadingText="Loading image..."
+            isCloudinary={true}
           />
         </div>
       ) : (
@@ -34,6 +36,7 @@ export default function UploadPreview({
               height={35}
               src="/images/empty_preview.png"
               alt="empty_preview"
+              priority={true}
             />
             <p className="text-gray-darker text-center text-xs md:text-sm">
               Find your Pokémon
