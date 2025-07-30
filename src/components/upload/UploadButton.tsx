@@ -1,6 +1,6 @@
 'use client';
 import { useEffect } from 'react';
-import Button from './common/Button';
+import Button from '../common/Button';
 
 interface Props {
   /** 업로드 후 public_id를 부모로 전달 */

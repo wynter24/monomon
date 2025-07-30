@@ -1,5 +1,5 @@
 import Image from 'next/image';
-import SkeletonImage from './common/SkeletonImage';
+import SkeletonImage from '../common/SkeletonImage';
 
 type UploadProps = {
   publicId: string | null;
