@@ -23,6 +23,17 @@
   --color-yellow: #FFDE5B;
   --color-yellow-darker: #F5D048;
   --color-black: #1F2937;
+
+  --animate-shine: shine 1.2s ease-in-out alternate infinite;
+
+  @keyframes shine {
+    0% {
+      background-position: 0% 50%;
+    }
+    100% {
+      background-position: 100% 50%;
+    }
+  }
 }
 
 /* TODO: 라이트 & 다크 모드 설정 */
