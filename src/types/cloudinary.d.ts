@@ -4,6 +4,7 @@ declare global {
   interface CloudinaryUploadResultInfo {
     public_id: string;
     secure_url: string;
+    etag: string;
   }
 
   interface CloudinaryUploadResult {
@@ -19,6 +20,8 @@ declare global {
   interface CloudinaryWidgetOptions {
     cloudName: string;
     uploadPreset: string;
+    // unique_filename: boolean;
+    // overwrite: boolean;
     sources?: string[];
     multiple?: boolean;
     cropping?: boolean;
