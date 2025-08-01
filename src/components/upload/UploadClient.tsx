@@ -31,8 +31,8 @@ export default function UploadClient() {
   }
 
   return (
-    <div className="container mx-auto flex flex-col gap-11 p-4">
-      <h1 className="text-2xl font-bold">Upload Photo</h1>
+    <div className="container mx-auto flex max-w-4xl flex-col px-4 sm:gap-11">
+      <h1 className="text-xl font-medium sm:text-2xl">Upload Photo</h1>
 
       <div className="flex min-h-[60vh] flex-col items-center justify-center gap-11">
         <UploadPreview publicId={publicId} onUploadClick={handleUploadClick} />
@@ -61,8 +61,8 @@ export default function UploadClient() {
       </div>
 
       <div>
-        <h3 className="mb-3 text-lg font-medium">Tips for the Best Results</h3>
-        <div className="text-gray-darker space-y-2 text-sm">
+        <h3 className="mb-3 text-sm sm:text-lg">Tips for the Best Results</h3>
+        <div className="text-gray-darker space-y-2 text-xs sm:text-sm">
           <p>Ensure good lighting on your face.</p>
           <p>Keep the camera at eye level for better angles.</p>
           <p>Avoid background distractions.</p>

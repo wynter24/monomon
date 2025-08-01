@@ -27,7 +27,7 @@ export default function UploadPreview({
         </div>
       ) : (
         <div
-          className="border-gray-darker bg-gray-lightest relative flex aspect-square h-48 w-48 cursor-pointer flex-col items-center justify-center rounded-md border-3 border-dashed transition-colors sm:h-80 sm:w-80 md:h-96 md:w-96"
+          className="border-gray-darker bg-gray-lightest relative flex aspect-square h-48 w-48 cursor-pointer flex-col items-center justify-center rounded-md border-3 border-dashed transition-colors sm:h-64 sm:w-64 md:h-80 md:w-80"
           onClick={onUploadClick}
         >
           <div className="flex flex-col items-center gap-2">
