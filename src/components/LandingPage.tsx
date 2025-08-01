@@ -27,7 +27,7 @@ export default function LandingPage() {
         </div>
 
         <button
-          className="animate-shine sm:hover:animate-shine w-full cursor-pointer rounded-2xl bg-gradient-to-r from-[#FACC15] via-[#FFEB3B] to-[#FACC15] bg-[length:200%_200%] bg-[position:0%_50%] px-24 py-4 text-xl text-black shadow-[0_4px_6px_rgba(0,0,0,0.1)] brightness-100 transition hover:shadow-[0_6px_8px_rgba(0,0,0,0.12)] sm:animate-none sm:hover:brightness-100"
+          className="animate-shine sm:hover:animate-shine w-full cursor-pointer rounded-2xl bg-gradient-to-r from-[#FACC15] via-[#FFEB3B] to-[#FACC15] bg-[length:200%_200%] bg-[position:0%_20%] px-24 py-4 text-xl text-black shadow-[0_4px_6px_rgba(0,0,0,0.1)] brightness-100 transition hover:shadow-[0_6px_8px_rgba(0,0,0,0.12)] sm:animate-none sm:hover:brightness-100"
           onClick={() => router.replace('/upload')}
         >
           Get started
