@@ -27,11 +27,11 @@ export default function UploadClient() {
   };
 
   if (mutation.isPending) {
-    return <Loading />;
+    return <Loading text="We’re finding your Pokémon twin" />;
   }
 
   return (
-    <div className="container mx-auto flex max-w-4xl flex-col px-4 sm:gap-11">
+    <div className="container mx-auto flex max-w-4xl flex-col px-4 py-8 sm:gap-11 sm:py-12 md:py-16">
       <h1 className="text-xl font-medium sm:text-2xl">Upload Photo</h1>
 
       <div className="flex min-h-[60vh] flex-col items-center justify-center gap-11">

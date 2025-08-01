@@ -1,8 +1,12 @@
 import Image from 'next/image';
 
-export default function Loading() {
+type LoadingProps = {
+  text: string;
+};
+
+export default function Loading({ text }: LoadingProps) {
   return (
-    <div className="flex h-screen flex-col items-center justify-center gap-8">
+    <div className="flex h-screen flex-col items-center justify-center gap-4 sm:gap-8">
       <div className="flex flex-col items-center">
         <Image
           width={70}
@@ -23,9 +27,7 @@ export default function Loading() {
           ></div>
         </div>
       </div>
-      <p className="text-lg sm:text-xl md:text-2xl">
-        We’re finding your Pokémon twin
-      </p>
+      <p className="text-lg sm:text-xl md:text-2xl">{text}</p>
     </div>
   );
 }

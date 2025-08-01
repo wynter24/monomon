@@ -3,6 +3,7 @@ import './globals.css';
 import { Toaster } from 'sonner';
 import QueryProvider from '@/lib/queryProvider';
 import Header from '@/components/common/Header';
+import Footer from '@/components/common/Footer';
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://monomon.vercel.app/'),
@@ -35,6 +36,7 @@ export default function RootLayout({
           <main className="max-w-4xk mx-auto w-full flex-1 px-4">
             {children}
           </main>
+          <Footer />
           <Toaster position="top-center" richColors />
         </QueryProvider>
       </body>

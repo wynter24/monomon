@@ -5,6 +5,7 @@ import SkeletonImage from '../common/SkeletonImage';
 import Button from '../common/Button';
 import { toast } from 'sonner';
 import { useResultQuery } from '@/hooks/useResultQuery';
+import Loading from '../common/Loading';
 
 type SharedResultClientProps = {
   id: string;
@@ -15,11 +16,7 @@ export default function SharedResultClient({ id }: SharedResultClientProps) {
   const router = useRouter();
 
   if (isLoading) {
-    return (
-      <div className="flex min-h-screen items-center justify-center p-4 lg:text-lg">
-        <p>Loading result...</p>
-      </div>
-    );
+    return <Loading text="Loading result" />;
   }
 
   if (isError || !result) {
@@ -28,7 +25,7 @@ export default function SharedResultClient({ id }: SharedResultClientProps) {
   }
 
   return (
-    <div className="flex flex-col items-center gap-8 pt-16 pb-10">
+    <div className="flex flex-col items-center py-28 sm:py-20">
       <div className="flex w-full max-w-md flex-col items-center gap-8">
         <div className="flex max-w-80 flex-col items-center gap-4">
           <SkeletonImage

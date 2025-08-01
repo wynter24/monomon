@@ -11,8 +11,8 @@ export default function Header() {
   if (isLanding) return null;
 
   return (
-    <header className="w-full px-4">
-      <nav className="mx-auto flex max-w-4xl items-center justify-between p-4 sm:py-6">
+    <header className="bg-yellow w-full px-4">
+      <nav className="mx-auto flex max-w-4xl items-center justify-between px-4">
         <Link
           href={'/upload'}
           className="relative h-16 w-16 sm:h-20 sm:w-20 md:h-24 md:w-24"

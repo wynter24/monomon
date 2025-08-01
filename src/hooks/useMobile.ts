@@ -5,7 +5,7 @@ export const useMobile = () => {
 
   useEffect(() => {
     const checkIsMobile = () => {
-      setIsMobile(window.innerWidth < 640); // sm breakpoint
+      setIsMobile(window.innerWidth <= 375); // sm breakpoint
     };
 
     checkIsMobile();
