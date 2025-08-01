@@ -28,14 +28,15 @@ export default function ResultClient({ id }: ResultClientProps) {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center p-4">
+    <div className="flex flex-col items-center gap-8 pt-16 pb-10">
       <div className="flex w-full max-w-md flex-col items-center gap-8">
-        <div className="flex flex-col items-center gap-4">
+        <div className="flex max-w-80 flex-col items-center gap-4">
           <SkeletonImage
             src={result.matched_pokemon_image}
             alt="matched_pokemon_image"
             width={400}
             height={400}
+            sizes="100vw"
             className="min-h-[190px] min-w-[190px]"
             priority={true}
             loadingText="Loading Pokémon..."

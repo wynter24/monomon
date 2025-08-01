@@ -29,10 +29,12 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className="h-full min-h-screen bg-white text-black">
+      <body className="min-h-screen bg-white text-black">
         <QueryProvider>
           <Header />
-          <main className="mx-auto px-4">{children}</main>
+          <main className="max-w-4xk mx-auto w-full flex-1 px-4">
+            {children}
+          </main>
           <Toaster position="top-center" richColors />
         </QueryProvider>
       </body>

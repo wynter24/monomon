@@ -26,7 +26,7 @@ export default function SkeletonImage({
   width = 400,
   height = 400,
   className = '',
-  sizes = '(max-width: 640px) 100vw, (max-width: 768px) 80vw, (max-width: 1024px) 60vw, 50vw',
+  sizes,
   priority = false,
   placeholder = 'blur',
   blurDataURL = BLUR_DATA_URL,
