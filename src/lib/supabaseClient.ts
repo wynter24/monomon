@@ -17,7 +17,7 @@ export async function fetchResultFromSupabase(
     .maybeSingle();
 
   if (error) {
-    console.error('❌ Supabase 조회 실패:', error.message);
+    // console.error('❌ Supabase 조회 실패:', error.message);
     return null;
   }
   return data?.result as MatchResult;

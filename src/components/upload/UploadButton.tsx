@@ -55,7 +55,6 @@ export const showUploadWidget = (
     },
     (err, result) => {
       if (!err && result.event === 'success') {
-        console.log('✅ 업로드 완료:', result);
         onUploadSuccess?.(result);
       }
     },
