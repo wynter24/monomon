@@ -1,15 +1,13 @@
 import Image from 'next/image';
 import SkeletonImage from '../common/SkeletonImage';
+import React from 'react';
 
 type UploadProps = {
   publicId: string | null;
-  onUploadClick?: () => void;
+  inputRef: React.RefObject<HTMLInputElement | null>;
 };
 
-export default function UploadPreview({
-  publicId,
-  onUploadClick,
-}: UploadProps) {
+export default function UploadPreview({ publicId, inputRef }: UploadProps) {
   return (
     <>
       {publicId ? (
@@ -28,7 +26,7 @@ export default function UploadPreview({
       ) : (
         <div
           className="border-gray-darker bg-gray-lightest relative flex aspect-square h-48 w-48 cursor-pointer flex-col items-center justify-center rounded-md border-3 border-dashed transition-colors sm:h-64 sm:w-64 md:h-80 md:w-80"
-          onClick={onUploadClick}
+          onClick={() => inputRef.current?.click()}
         >
           <div className="flex flex-col items-center gap-2">
             <Image

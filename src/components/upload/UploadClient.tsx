@@ -1,29 +1,32 @@
 'use client';
 
-import { useMobile } from '@/hooks/useMobile';
-import { useState } from 'react';
-import UploadButton, { showUploadWidget } from './UploadButton';
+import { ChangeEvent, useRef, useState } from 'react';
 import UploadPreview from './UploadPreview';
-import Button from '../common/Button';
 import Loading from '../common/Loading';
 import { useUploadMutation } from './hooks/useUploadMutation';
 import { toast } from 'sonner';
+import { uploadImage } from '@/api/uploadImage';
+import UploadActions from './UploadActions';
 
 export default function UploadClient() {
+  const inputRef = useRef<HTMLInputElement>(null);
   const [publicId, setPublicId] = useState<string | null>(null);
   const [uploadedImgUrl, setUploadedImgUrl] = useState<string | null>(null);
   const [etag, setEtag] = useState<string | null>(null);
-  const isMobile = useMobile();
   const mutation = useUploadMutation();
 
-  const handleUploadSuccess = (result: CloudinaryUploadResult) => {
-    setPublicId(result.info.public_id);
-    setUploadedImgUrl(result.info.secure_url);
-    setEtag(result.info.etag);
-  };
+  const handleFileChange = async (e: ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
 
-  const handleUploadClick = () => {
-    showUploadWidget(handleUploadSuccess);
+    try {
+      const data = await uploadImage(file);
+      setPublicId(data.public_id);
+      setUploadedImgUrl(data.secure_url);
+      setEtag(data.etag);
+    } catch (error) {
+      console.error('Upload failed', error);
+    }
   };
 
   if (mutation.isPending) {
@@ -35,29 +38,26 @@ export default function UploadClient() {
       <h1 className="text-xl font-medium sm:text-2xl">Upload Photo</h1>
 
       <div className="flex min-h-[60vh] flex-col items-center justify-center gap-11">
-        <UploadPreview publicId={publicId} onUploadClick={handleUploadClick} />
+        <input
+          ref={inputRef}
+          type="file"
+          accept="image/*"
+          onChange={handleFileChange}
+          className="hidden"
+        />
 
-        <div className="flex max-w-3xs flex-col items-center gap-3">
-          <UploadButton
-            isMobile={isMobile}
-            onUploadSuccess={handleUploadSuccess}
-          />
-          <Button
-            size={isMobile ? 'md' : 'lg'}
-            text="Find my pokemon"
-            disabled={!publicId}
-            variants="active"
-            onClick={() => {
-              if (!uploadedImgUrl || !etag) {
-                toast.warning(
-                  'Please upload a photo to find your Pokémon twin!',
-                );
-                return;
-              }
-              mutation.mutate({ uploadedImgUrl, etag });
-            }}
-          />
-        </div>
+        <UploadPreview publicId={publicId} inputRef={inputRef} />
+        <UploadActions
+          disabled={!publicId}
+          onUploadClick={() => inputRef.current?.click()}
+          onFindClick={() => {
+            if (!uploadedImgUrl || !etag) {
+              toast.warning('Please upload a photo to find your Pokémon twin!');
+              return;
+            }
+            mutation.mutate({ uploadedImgUrl, etag });
+          }}
+        />
       </div>
 
       <div>
