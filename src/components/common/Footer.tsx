@@ -13,7 +13,7 @@ export default function Footer() {
   return (
     <footer className="bg-yellow w-full px-4 text-black">
       <div className="mx-auto max-w-4xl space-y-4 px-5 py-10">
-        <p className="text-lg font-bold sm:text-xl">
+        <p className="text-lg font-semibold sm:text-xl">
           Find your Pokémon twin with Monomon
         </p>
         <p className="text-sm leading-relaxed sm:text-base">
@@ -34,7 +34,7 @@ export default function Footer() {
           </a>
         </div>
 
-        <p className="text-xs text-black/60">
+        <p className="text-xs text-black">
           © {new Date().getFullYear()} Monomon. All rights reserved.
         </p>
       </div>
