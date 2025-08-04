@@ -4,12 +4,14 @@ import { useMobile } from '@/hooks/useMobile';
 
 interface uploadActionsProps {
   disabled: boolean;
+  onCaptureClick: () => void;
   onUploadClick: () => void;
   onFindClick: () => void;
 }
 
 export default function UploadActions({
   disabled,
+  onCaptureClick,
   onUploadClick,
   onFindClick,
 }: uploadActionsProps) {
@@ -19,7 +21,12 @@ export default function UploadActions({
     <div className="flex max-w-3xs flex-col items-center justify-center gap-3">
       <Button
         size={isMobile ? 'md' : 'lg'}
-        text="Upload photo "
+        text="Take photo"
+        onClick={onCaptureClick}
+      />
+      <Button
+        size={isMobile ? 'md' : 'lg'}
+        text="Upload photo"
         onClick={onUploadClick}
       />
       <Button

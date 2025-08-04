@@ -4,16 +4,21 @@ import React from 'react';
 
 type UploadProps = {
   publicId: string | null;
+  capturedImage: string | null;
   inputRef: React.RefObject<HTMLInputElement | null>;
 };
 
-export default function UploadPreview({ publicId, inputRef }: UploadProps) {
+export default function UploadPreview({
+  publicId,
+  capturedImage,
+  inputRef,
+}: UploadProps) {
   return (
     <>
       {publicId ? (
         <div className="w-full max-w-sm sm:max-w-md md:max-w-lg lg:max-w-xl">
           <SkeletonImage
-            src={publicId}
+            src={publicId || capturedImage || ''}
             alt="Uploaded"
             width={400}
             height={400}
