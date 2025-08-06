@@ -1,5 +1,7 @@
 'use client';
 
+import Button from '../common/Button';
+
 interface Props {
   image: string;
   onRetake: () => void;
@@ -8,8 +10,8 @@ interface Props {
 
 export default function PreviewScreen({ image, onRetake, onConfirm }: Props) {
   return (
-    <div className="flex flex-col items-center justify-center gap-6 px-4 py-10">
-      <div className="relative aspect-[9/16] h-[70vh] w-full max-w-md overflow-hidden rounded-lg bg-black sm:aspect-video">
+    <div className="mx-auto flex max-w-4xl flex-col items-center justify-center gap-6 px-4 py-10">
+      <div className="relative aspect-[9/16] h-[70vh] w-full overflow-hidden rounded-lg bg-black sm:aspect-video">
         <img
           src={image}
           alt="캡처된 이미지"
@@ -17,18 +19,18 @@ export default function PreviewScreen({ image, onRetake, onConfirm }: Props) {
         />
       </div>
       <div className="flex gap-4">
-        <button
-          className="cursor-pointer rounded bg-yellow-400 px-4 py-2"
+        <Button
+          text="Use Photo"
+          size="md"
+          variants="active"
           onClick={onConfirm}
-        >
-          확인
-        </button>
-        <button
-          className="cursor-pointer rounded bg-gray-300 px-4 py-2"
+        />
+        <Button
+          text="Retake"
+          size="md"
+          variants="inactive"
           onClick={onRetake}
-        >
-          재촬영
-        </button>
+        />
       </div>
     </div>
   );
