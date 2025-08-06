@@ -33,9 +33,7 @@ export default function RootLayout({
       <body className="min-h-screen bg-white text-black">
         <QueryProvider>
           <Header />
-          <main className="max-w-4xk mx-auto w-full flex-1 px-4">
-            {children}
-          </main>
+          <main className="mx-auto w-full flex-1 px-4">{children}</main>
           <Footer />
           <Toaster position="top-center" richColors />
         </QueryProvider>
