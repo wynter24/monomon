@@ -6,11 +6,14 @@ import { useRouter } from 'next/navigation';
 export default function LandingPage() {
   const router = useRouter();
   return (
-    <div className="flex min-h-screen items-center justify-center p-4">
+    <section
+      className="flex min-h-screen items-center justify-center p-4"
+      aria-label="Monomon landing section"
+    >
       <div className="flex min-h-screen max-w-md flex-col items-center justify-center gap-10">
         <Image
           src="/images/pikachu.png"
-          alt="pikachu"
+          alt="Illustration of pikachu"
           width={300}
           height={300}
           priority={true}
@@ -33,6 +36,6 @@ export default function LandingPage() {
           Get started
         </button>
       </div>
-    </div>
+    </section>
   );
 }

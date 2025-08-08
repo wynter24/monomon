@@ -1,36 +1,77 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 📸 Monomon — Find your Pokémon twin
 
-## Getting Started
+**Monomon**은 사진 업로드 또는 실시간 촬영을 통해 사용자의 얼굴을 분석하고,  
+닮은 포켓몬 캐릭터를 찾아주는 **AI 얼굴 유사도 매칭 서비스**입니다.  
+정확한 얼굴 분석(DeepFace)과 귀여운 디자인을 결합해 **재미와 신뢰도**를 모두 제공합니다.
 
-First, run the development server:
+---
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+## 📌 프로젝트 개요
+- **서비스명:** 모노몬 (Monomon)
+- **슬로건:** Find your Pokémon twin with Monomon
+- **한 줄 소개:** 사진 업로드 또는 촬영으로 얼굴을 분석해, 가장 닮은 포켓몬을 찾아주는 서비스
+- **기획 의도:**  
+  - 포켓몬은 세대를 아우르는 글로벌 인기 IP  
+  - 기존 닮은꼴 서비스의 낮은 정확도와 아쉬운 UI/UX 개선  
+  - AI 기반 정확한 분석 + 귀여운 포켓몬 디자인 결합
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+---
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## 🛠 기술 스택
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+| 분야 | 기술 | 설명 |
+| --- | --- | --- |
+| 웹 프레임워크 | **Next.js** + Vercel | SSR/CSR 모두 활용, 반응형 웹 제작에 적합 |
+| AI 얼굴 분석 | **Hugging Face Spaces** (Python + DeepFace) | 이미지 벡터화 후 얼굴 유사도 분석 |
+| 이미지 저장 | **Cloudinary** | 이미지 최적화·저장 및 URL 생성 |
+| 데이터 저장 | **Supabase** | 서버리스 DB/스토리지/인증 통합 제공 |
+| 배포 | **Vercel + GitHub Actions** | CI/CD 자동화 및 빠른 배포 |
+| 포켓몬 데이터 | **PokeAPI** | 공식 포켓몬 이미지·이름·타입 정보 제공 |
 
-## Learn More
+---
 
-To learn more about Next.js, take a look at the following resources:
+## 🔍 분석 방식
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+1. **이미지 벡터화 및 비교**
+   - Hugging Face + DeepFace를 이용해 업로드된 이미지를 벡터화
+   - 사전 준비된 포켓몬 캐릭터 이미지 데이터와 비교
+2. **유사도 계산**
+   - 가장 높은 유사도를 가진 포켓몬을 결과로 선정
+3. **결과 처리**
+   - 매칭된 포켓몬 정보(PokeAPI 기반)와 유사도 점수를 표시
+   - 결과 이미지를 Cloudinary에 저장 후 공유 링크 제공
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+---
 
-## Deploy on Vercel
+## 📂 주요 기능 (MVP 기준)
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+- **사진 업로드** (PC/모바일 대응)
+- **실시간 촬영** (`getUserMedia` 활용, 웹/모바일 모두 지원)
+- **AI 얼굴 분석** (DeepFace)
+- **닮은 포켓몬 결과 제공**
+- **결과 이미지 저장 및 공유** (SNS 등)
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+---
+
+## 🚀 향후 확장 계획
+
+- **촬영한 이미지 편집** (crop, 회전, 좌우반전) 
+- **실시간 얼굴 필터 적용** (인스타그램 스타일)
+- **3D 포켓몬 도감** (회전 가능한 뷰어 + 상세 정보)
+- **홈페이지 랜덤 3D 포켓몬 노출** (애니메이션 포함)
+- **PWA 설치 지원** — 별도 앱 설치 없이 홈 화면에 추가 가능
+
+---
+
+## 📱 서비스 사용 방법
+
+1. **사진 업로드** 또는 **실시간 촬영**  
+2. **AI 분석**을 통해 닮은 포켓몬 매칭  
+3. **결과 확인** (유사도 점수 + 포켓몬 정보)  
+4. **이미지 저장 및 SNS 공유**
+
+---
+
+## 📖 라이선스
+이 프로젝트는 포켓몬 공식 라이선스와 무관하며, 교육·연구·비상업적 목적의 팬메이드 서비스입니다.
+

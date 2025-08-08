@@ -12,14 +12,17 @@ export default function Header() {
 
   return (
     <header className="bg-yellow w-full px-4">
-      <nav className="mx-auto flex max-w-4xl items-center justify-between px-4">
+      <nav
+        className="mx-auto flex max-w-4xl items-center justify-between px-4"
+        aria-label="main navigation"
+      >
         <Link
           href={'/upload'}
           className="relative h-16 w-16 sm:h-20 sm:w-20 md:h-24 md:w-24"
         >
           <Image
             src="/images/logo.png"
-            alt="logo"
+            alt="Monomon logo"
             fill
             className="object-contain"
             priority

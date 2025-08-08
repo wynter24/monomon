@@ -21,16 +21,23 @@ export default function SharedResultClient({ id }: SharedResultClientProps) {
 
   if (isError || !result) {
     toast.error('Failed to load. Please try again.');
-    return <p>No results found.</p>;
+    return (
+      <div role="status" aria-live="polite" className="py-10 text-center">
+        <p className="text-sm text-gray-500">No results found.</p>
+      </div>
+    );
   }
 
   return (
-    <div className="flex flex-col items-center py-28 sm:py-20">
+    <section
+      className="flex flex-col items-center py-28 sm:py-20"
+      aria-label="shared pokemon result"
+    >
       <div className="flex w-full max-w-md flex-col items-center gap-8">
         <div className="flex max-w-80 flex-col items-center gap-4">
           <SkeletonImage
             src={result.matched_pokemon_image}
-            alt="matched_pokemon_image"
+            alt={`Matched Pokémon: ${result.matched_pokemon_name}`}
             width={400}
             height={400}
             sizes="100vw"
@@ -56,9 +63,10 @@ export default function SharedResultClient({ id }: SharedResultClientProps) {
             onClick={() => {
               router.push('/upload');
             }}
+            aria-label="Find your own Pokémon look-alike"
           />
         </div>
       </div>
-    </div>
+    </section>
   );
 }

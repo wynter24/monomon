@@ -11,9 +11,9 @@ export default function Footer() {
   if (isLanding || isMobile) return null;
 
   return (
-    <footer className="bg-yellow w-full px-4 text-black">
+    <footer className="bg-yellow w-full px-4 text-black" aria-label="site info">
       <div className="mx-auto max-w-4xl space-y-4 px-5 py-10">
-        <p className="text-lg font-bold sm:text-xl">
+        <p className="text-lg font-semibold sm:text-xl">
           Find your Pokémon twin with Monomon
         </p>
         <p className="text-sm leading-relaxed sm:text-base">
@@ -22,19 +22,37 @@ export default function Footer() {
           Save, share, and enjoy the fun.
         </p>
 
-        <div className="flex flex-wrap gap-4 text-xs text-black/70 sm:text-sm">
-          <a href="#" className="hover:underline">
-            Terms of Service
-          </a>
-          <a href="#" className="hover:underline">
-            Privacy Policy
-          </a>
-          <a href="mailto:m.wynter24.k@gmail.com" className="hover:underline">
-            Contact
-          </a>
-        </div>
+        <ul className="flex flex-wrap gap-4 text-xs text-black/70 sm:text-sm">
+          <li>
+            <a
+              href="#"
+              className="hover:underline"
+              aria-label="Terms of Service (서비스 이용약관)"
+            >
+              Terms of Service
+            </a>
+          </li>
+          <li>
+            <a
+              href="#"
+              className="hover:underline"
+              aria-label="Privacy Policy (개인정보 처리방침)"
+            >
+              Privacy Policy
+            </a>
+          </li>
+          <li>
+            <a
+              href="mailto:m.wynter24.k@gmail.com"
+              className="hover:underline"
+              aria-label="Contact (이메일 문의)"
+            >
+              Contact
+            </a>
+          </li>
+        </ul>
 
-        <p className="text-xs text-black/60">
+        <p className="text-xs text-black">
           © {new Date().getFullYear()} Monomon. All rights reserved.
         </p>
       </div>

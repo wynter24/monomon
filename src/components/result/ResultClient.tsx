@@ -21,13 +21,20 @@ export default function ResultClient({ id }: ResultClientProps) {
 
   if (isError || !result) {
     toast.error('Failed to load. Please try again.');
-    return <p>No results found.</p>;
+    return (
+      <div role="status" aria-live="polite" className="py-10 text-center">
+        <p className="text-sm text-gray-500">No results found.</p>
+      </div>
+    );
   }
 
   return (
-    <div className="flex flex-col items-center py-28 sm:py-20">
+    <section
+      className="flex flex-col items-center py-28 sm:py-20"
+      aria-label="result pokemon"
+    >
       <div className="flex w-full max-w-md flex-col items-center gap-8">
-        <div className="flex max-w-80 flex-col items-center gap-4">
+        <figure className="flex max-w-80 flex-col items-center gap-4">
           <SkeletonImage
             src={result.matched_pokemon_image}
             alt="matched_pokemon_image"
@@ -38,15 +45,15 @@ export default function ResultClient({ id }: ResultClientProps) {
             priority={true}
             loadingText="Loading Pokémon..."
           />
-          <div className="text-center">
+          <figcaption className="text-center">
             <h2 className="text-2xl font-semibold capitalize">
               {result?.matched_pokemon_name}
             </h2>
             <p className="mt-2 text-lg text-gray-600">
               Similarity Score: {(result.similarity_score * 100).toFixed(2)}%
             </p>
-          </div>
-        </div>
+          </figcaption>
+        </figure>
 
         <div className="flex w-full max-w-xs flex-col items-center gap-3">
           <Button
@@ -66,6 +73,7 @@ export default function ResultClient({ id }: ResultClientProps) {
                 alert('Link copied to clipboard!');
               }
             }}
+            aria-label={`Share your result with ${result.matched_pokemon_name}`}
           />
           <Button
             size={'lg'}
@@ -74,9 +82,10 @@ export default function ResultClient({ id }: ResultClientProps) {
             onClick={() => {
               router.push('/upload');
             }}
+            aria-label="Try the matching again"
           />
         </div>
       </div>
-    </div>
+    </section>
   );
 }
