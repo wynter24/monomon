@@ -21,7 +21,7 @@ export default function PreviewScreen({ image, onRetake, onConfirm }: Props) {
           className="h-full w-full object-cover"
         />
       </div>
-      <div className="flex gap-4">
+      <div className="flex flex-col gap-4 sm:flex-row">
         <Button
           text="Use Photo"
           size="md"
