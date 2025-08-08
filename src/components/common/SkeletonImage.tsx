@@ -45,8 +45,12 @@ export default function SkeletonImage({
     <div className="relative w-full">
       {/* 스켈레톤 UI */}
       {!imageLoaded && (
-        <div className="absolute inset-0 flex animate-pulse items-center justify-center rounded-md bg-gray-200">
-          <div className="text-sm text-gray-400">{loadingText}</div>
+        <div
+          className="absolute inset-0 flex animate-pulse items-center justify-center rounded-md bg-gray-200"
+          role="status"
+          aria-live="polite"
+        >
+          <span className="text-sm text-gray-400">{loadingText}</span>
         </div>
       )}
 

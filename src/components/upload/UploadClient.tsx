@@ -92,7 +92,10 @@ export default function UploadClient() {
   }
 
   return (
-    <div className="container mx-auto flex max-w-4xl flex-col gap-6 p-4 sm:gap-16 sm:py-12">
+    <section
+      className="container mx-auto flex max-w-4xl flex-col gap-6 p-4 sm:gap-16 sm:py-12"
+      aria-label="Photo selection area"
+    >
       <h1 className="text-xl font-medium sm:text-2xl">Upload Photo</h1>
 
       <div className="flex min-h-[60vh] flex-col items-center justify-center gap-11">
@@ -102,8 +105,16 @@ export default function UploadClient() {
           accept="image/*"
           onChange={handleFileChange}
           className="hidden"
+          aria-label="Upload a photo"
         />
-        <video ref={videoRef} autoPlay playsInline muted className="hidden" />
+        <video
+          ref={videoRef}
+          autoPlay
+          playsInline
+          muted
+          className="hidden"
+          aria-hidden="true"
+        />
 
         <UploadPreview
           publicId={publicId}
@@ -124,14 +135,16 @@ export default function UploadClient() {
         />
       </div>
 
-      <div>
-        <h3 className="mb-3 text-sm sm:text-lg">Tips for the Best Results</h3>
+      <section aria-labelledby="upload-tips-heading">
+        <h2 id="upload-tips-heading" className="mb-3 text-sm sm:text-lg">
+          Tips for the Best Results
+        </h2>
         <div className="text-gray-darker space-y-2 text-xs sm:text-sm">
           <p>Ensure good lighting on your face.</p>
           <p>Keep the camera at eye level for better angles.</p>
           <p>Avoid background distractions.</p>
         </div>
-      </div>
-    </div>
+      </section>
+    </section>
   );
 }

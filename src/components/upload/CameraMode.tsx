@@ -114,8 +114,8 @@ export default function CameraMode({ videoRef, onCapture, onCancel }: Props) {
       await startCamera(nextDevice.deviceId);
       setCurrentDeviceId(nextDevice.deviceId);
       setMirror(/front|user/i.test(nextDevice.label));
-    } catch (error) {
-      console.error('카메라 전환 실패:', error);
+    } catch {
+      // console.error('카메라 전환 실패:', error);
       toast.error('카메라 전환에 실패했습니다.');
     } finally {
       setIsSwitching(false);
@@ -149,19 +149,27 @@ export default function CameraMode({ videoRef, onCapture, onCancel }: Props) {
   };
 
   return (
-    <div className="mx-auto flex max-w-4xl flex-col items-center justify-center gap-6 px-4 py-10">
+    <section
+      className="mx-auto flex max-w-4xl flex-col items-center justify-center gap-6 px-4 py-10"
+      aria-label="Camera mode"
+    >
       <div className="relative aspect-[9/16] h-[70vh] w-full overflow-hidden rounded-lg bg-black sm:aspect-video">
         <video
           ref={videoRef}
           autoPlay
           playsInline
           muted
+          aria-hidden="true"
           onLoadedData={() => setVideoReady(true)}
           className={`h-full w-full object-cover ${mirror ? 'scale-x-[-1]' : ''}`}
         />
         {isSwitching && (
-          <div className="bg-opacity-50 absolute inset-0 flex items-center justify-center bg-black">
-            <div className="text-white">카메라 전환 중...</div>
+          <div
+            className="bg-opacity-50 absolute inset-0 flex items-center justify-center bg-black"
+            role="status"
+            aria-live="polite"
+          >
+            <div className="text-white">Switching camera...</div>
           </div>
         )}
       </div>
@@ -170,6 +178,7 @@ export default function CameraMode({ videoRef, onCapture, onCancel }: Props) {
           onClick={capture}
           disabled={!videoReady}
           className="rounded-full bg-yellow-400 p-3 hover:bg-yellow-300 disabled:opacity-50"
+          aria-label="Capture photo"
         >
           <Camera size={24} />
         </button>
@@ -178,6 +187,7 @@ export default function CameraMode({ videoRef, onCapture, onCancel }: Props) {
             onClick={switchCamera}
             disabled={isSwitching}
             className="rounded-full bg-gray-200 p-3 hover:bg-gray-300 disabled:opacity-50 sm:hidden"
+            aria-label="Switch camera"
           >
             <RefreshCw
               size={20}
@@ -188,16 +198,18 @@ export default function CameraMode({ videoRef, onCapture, onCancel }: Props) {
         <button
           onClick={() => setMirror((prev) => !prev)}
           className="rounded-full bg-gray-200 p-3 hover:bg-gray-300"
+          aria-label="Toggle mirror mode"
         >
           <FlipHorizontal size={20} />
         </button>
         <button
           onClick={handleCancel}
           className="rounded-full bg-gray-200 p-3 hover:bg-gray-300"
+          aria-label="Cancel capture"
         >
           <X size={20} />
         </button>
       </div>
-    </div>
+    </section>
   );
 }
