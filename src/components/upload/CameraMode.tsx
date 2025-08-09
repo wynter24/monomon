@@ -20,7 +20,6 @@ export default function CameraMode({ videoRef, onCapture, onCancel }: Props) {
 
   const streamRef = useRef<MediaStream | null>(null);
   const startingRef = useRef<Promise<void> | null>(null);
-  const skipNextEffectRef = useRef(false);
 
   const isIOS =
     typeof navigator !== 'undefined' &&
@@ -57,7 +56,6 @@ export default function CameraMode({ videoRef, onCapture, onCancel }: Props) {
       try {
         await stopCurrentStream();
 
-        // deviceId가 오면 플랫폼 상관없이 항상 exact로 시도
         const videoConstraints: MediaTrackConstraints = opts?.deviceId
           ? {
               deviceId: { exact: opts.deviceId },
@@ -76,26 +74,9 @@ export default function CameraMode({ videoRef, onCapture, onCancel }: Props) {
           video: videoConstraints,
           audio: false,
         });
-
         streamRef.current = stream;
 
-        // 열린 뒤엔 목록/라벨 보강
-        try {
-          const all = await navigator.mediaDevices.enumerateDevices();
-          const vids = all.filter((d) => d.kind === 'videoinput');
-          setDevices(vids);
-
-          // deviceId 없던 초기 진입 시, 실제 열린 트랙 id 동기화
-          if (!opts?.deviceId) {
-            const openedTrack = stream.getVideoTracks()[0];
-            const openedId = openedTrack.getSettings().deviceId as string;
-            if (openedId) {
-              skipNextEffectRef.current = true; // 다음 effect 건너뛰기
-              setCurrentDeviceId(openedId);
-            }
-          }
-        } catch {}
-
+        // ★ 비디오에 바로 붙임 (초기든 전환이든 동일)
         if (videoRef.current) {
           videoRef.current.srcObject = stream;
           videoRef.current.onloadeddata = () => {
@@ -104,6 +85,19 @@ export default function CameraMode({ videoRef, onCapture, onCancel }: Props) {
             videoRef.current?.play().catch(() => {});
           };
         }
+
+        // ★ 목록/현재 deviceId는 “기록용”으로만 업데이트
+        try {
+          const all = await navigator.mediaDevices.enumerateDevices();
+          const vids = all.filter((d) => d.kind === 'videoinput');
+          setDevices(vids);
+
+          const openedTrack = stream.getVideoTracks()[0];
+          const openedId = openedTrack.getSettings().deviceId as
+            | string
+            | undefined;
+          if (openedId) setCurrentDeviceId(openedId);
+        } catch {}
 
         setNeedsUserAction(false);
       } catch (err: any) {
@@ -130,7 +124,7 @@ export default function CameraMode({ videoRef, onCapture, onCancel }: Props) {
     let mounted = true;
     (async () => {
       try {
-        await startCamera({ facingMode: 'user' });
+        await startCamera({ facingMode: 'user' }); // ← 여기서 바로 붙이고, 목록/현재ID 기록
       } catch {
         if (mounted) setNeedsUserAction(true);
       }
@@ -141,26 +135,6 @@ export default function CameraMode({ videoRef, onCapture, onCancel }: Props) {
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-
-  // ✅ currentDeviceId가 바뀔 때 카메라는 "딱 한 번"만 재시작
-  useEffect(() => {
-    if (!currentDeviceId) return;
-
-    // 1) 먼저 스킵 플래그를 확인 (초기 진입 때 effect 1회 건너뜀)
-    if (skipNextEffectRef.current) {
-      skipNextEffectRef.current = false;
-      return;
-    }
-
-    // 2) 실제 전환 시작
-    setIsSwitching(true);
-    startCamera({ deviceId: currentDeviceId }).catch(() => {
-      // 실패 시 로딩 해제 (성공 시 onloadeddata에서 해제됨)
-      setIsSwitching(false);
-    });
-
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentDeviceId]);
 
   // 후면 후보 탐색 헬퍼
   const findBackCameraId = () => {
@@ -178,12 +152,11 @@ export default function CameraMode({ videoRef, onCapture, onCancel }: Props) {
   };
 
   const switchCamera = async () => {
-    if (isSwitching) return;
+    if (isSwitching || startingRef.current) return;
 
     setIsSwitching(true);
 
     try {
-      // 전환은 항상 deviceId로 “확정”해서 시도
       const nextId = findBackCameraId();
       if (!nextId) {
         setIsSwitching(false);
@@ -191,26 +164,14 @@ export default function CameraMode({ videoRef, onCapture, onCancel }: Props) {
         return;
       }
 
-      if (nextId === currentDeviceId) {
-        // 이미 후면이면 전면 후보를 찾아봄 (라벨에 front/user)
-        const front = devices.find((d) => /(front|user)/i.test(d.label || ''));
-        if (front && front.deviceId !== currentDeviceId) {
-          setMirror(true);
-          setCurrentDeviceId(front.deviceId);
-          return;
-        }
-        setIsSwitching(false);
-        return;
-      }
-
-      // 미러는 라벨 있으면 동기화, 없으면 기본값 유지
       const nextLabel = (
         devices.find((d) => d.deviceId === nextId)?.label || ''
       ).toLowerCase();
       if (nextLabel) setMirror(/front|user/.test(nextLabel));
 
-      // 실제 전환은 effect가 수행
-      setCurrentDeviceId(nextId);
+      // ★ 버튼 핸들러에서 직접 열기
+      await startCamera({ deviceId: nextId });
+      setCurrentDeviceId(nextId); // 기록만
     } catch {
       setIsSwitching(false);
     }
