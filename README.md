@@ -22,7 +22,7 @@
 | 분야 | 기술 | 설명 |
 | --- | --- | --- |
 | 웹 프레임워크 | **Next.js** + Vercel | SSR/CSR 모두 활용, 반응형 웹 제작에 적합 |
-| AI 얼굴 분석 | **Hugging Face Spaces** (Python + DeepFace) | 이미지 벡터화 후 얼굴 유사도 분석 |
+| AI 얼굴 분석 | **[Hugging Face Spaces](https://huggingface.co/spaces/wynter24/pokemon-face-match)** (Python + DeepFace) | 이미지 벡터화 후 얼굴 유사도 분석 |
 | 이미지 저장 | **Cloudinary** | 이미지 최적화·저장 및 URL 생성 |
 | 데이터 저장 | **Supabase** | 서버리스 DB/스토리지/인증 통합 제공 |
 | 배포 | **Vercel + GitHub Actions** | CI/CD 자동화 및 빠른 배포 |
@@ -30,10 +30,23 @@
 
 ---
 
+## 🧪 Demo & API
+
+- **Hugging Face Spaces 데모:** [monomon-face-match](https://huggingface.co/spaces/wynter24/pokemon-face-match)  
+- **API 문서:** [Swagger UI](https://wynter24-pokemon-face-match.hf.space/docs)  
+- **엔드포인트:** `POST /match`  
+- **예시 요청:**
+  ```bash
+  curl -X POST "https://wynter24-pokemon-face-match.hf.space/match" \
+       -H "Content-Type: application/json" \
+       -d '{"image_url": "https://res.cloudinary.com/demo/image/upload/sample.jpg"}'
+
+---
+
 ## 🔍 분석 방식
 
 1. **이미지 벡터화 및 비교**
-   - Hugging Face + DeepFace를 이용해 업로드된 이미지를 벡터화
+   - [Hugging Face Spaces](https://huggingface.co/spaces/wynter24/pokemon-face-match) + DeepFace를 이용해 업로드된 이미지를 벡터화
    - 사전 준비된 포켓몬 캐릭터 이미지 데이터와 비교
 2. **유사도 계산**
    - 가장 높은 유사도를 가진 포켓몬을 결과로 선정
