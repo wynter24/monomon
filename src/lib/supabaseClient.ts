@@ -11,9 +11,9 @@ export async function fetchResultFromSupabase(
   id: string,
 ): Promise<MatchResult | null> {
   const { data, error } = await supabase
-    .from('pokemon_results')
+    .from('image_results')
     .select('*')
-    .eq('id', id)
+    .eq('share_id', id)
     .maybeSingle();
 
   if (error) {

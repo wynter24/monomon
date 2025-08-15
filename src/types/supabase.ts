@@ -7,13 +7,37 @@ export type Json =
   | Json[];
 
 export type Database = {
-  // Allows to automatically instanciate createClient with right options
+  // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
     PostgrestVersion: '12.2.3 (519615d)';
   };
   public: {
     Tables: {
+      image_results: {
+        Row: {
+          created_at: string | null;
+          image_hash: string;
+          matched_id: number | null;
+          result: Json;
+          share_id: string;
+        };
+        Insert: {
+          created_at?: string | null;
+          image_hash: string;
+          matched_id?: number | null;
+          result: Json;
+          share_id?: string;
+        };
+        Update: {
+          created_at?: string | null;
+          image_hash?: string;
+          matched_id?: number | null;
+          result?: Json;
+          share_id?: string;
+        };
+        Relationships: [];
+      };
       pokemon_embeddings: {
         Row: {
           embedding: Json | null;
