@@ -6,49 +6,43 @@ export async function savePokemonResult(
   etag: string,
   matchResult: MatchResult,
 ) {
-  const imageHash = etag;
-
-  // 중복 체크
-  const { data: existing, error: selectError } = await supabase
+  const { data, error } = await supabase
     .from('image_results')
-    .select('share_id, result')
-    .eq('image_hash', imageHash)
-    .maybeSingle();
-
-  if (selectError) {
-    if (process.env.NODE_ENV === 'development') {
-      console.error('DB 조회 실패:', selectError.message);
-    }
-  }
-
-  if (existing) {
-    // console.log('✅ 이미 저장된 결과, insert 생략');
-    return { result: existing.result, id: existing.share_id }; // 기존 결과 그대로 반환
-  }
-
-  // 새로 insert
-  const { data: insertData, error: insertError } = await supabase
-    .from('image_results')
-    .insert([
+    .upsert(
       {
-        image_hash: imageHash,
+        image_hash: etag,
         result: matchResult,
         matched_id: matchResult.matched_pokemon_id,
       },
-    ])
+      { onConflict: 'image_hash', ignoreDuplicates: true }, // == INSERT ... ON CONFLICT DO NOTHING
+    )
     .select('share_id')
     .maybeSingle();
 
-  // unique constraint 중복이면 무시
-  if (insertError?.code === '23505') {
-    // console.warn('이미 저장된 데이터(중복 insert 방지됨)');
-    return { result: matchResult, id: insertData?.share_id };
-  } else if (insertError) {
-    if (process.env.NODE_ENV === 'development') {
-      console.error('DB 저장 실패:', insertError.message);
-    }
+  if (error && process.env.NODE_ENV === 'development') {
+    console.error('image_results upsert failed:', error.message ?? error);
   }
 
-  // console.log('✅ 새 결과 저장 완료');
-  return { result: matchResult, id: insertData?.share_id };
+  // 충돌로 data가 비면 한 번 조회
+  if (!data?.share_id) {
+    const { data: existing, error: fetchErr } = await supabase
+      .from('image_results')
+      .select('share_id, result')
+      .eq('image_hash', etag)
+      .maybeSingle();
+
+    if (fetchErr && process.env.NODE_ENV === 'development') {
+      console.error(
+        'image_results fetch failed:',
+        fetchErr.message ?? fetchErr,
+      );
+    }
+
+    return {
+      result: existing?.result ?? matchResult,
+      id: existing?.share_id ?? null,
+    };
+  }
+
+  return { result: matchResult, id: data.share_id };
 }
