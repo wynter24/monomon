@@ -5,10 +5,10 @@ import UploadPreview from './UploadPreview';
 import Loading from '../common/Loading';
 import { useUploadMutation } from './hooks/useUploadMutation';
 import { toast } from 'sonner';
-import { uploadImage } from '@/api/uploadImage';
 import UploadActions from './UploadActions';
 import CameraMode from './CameraMode';
 import PreviewScreen from './PreviewScreen';
+import { useImageUpload } from '@/hooks/useImageUpload';
 
 export default function UploadClient() {
   const inputRef = useRef<HTMLInputElement>(null);
@@ -25,18 +25,21 @@ export default function UploadClient() {
     setMode('preview');
   };
 
-  const handleConfirm = async () => {
+  const { uploadFile } = useImageUpload(({ publicId, secureUrl, etag }) => {
+    setPublicId(publicId);
+    setUploadedImgUrl(secureUrl);
+    setEtag(etag);
+  });
+
+  // 파일 선택
+  const handleFileChange = async (e: ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
     try {
-      const blob = dataURLtoBlob(capturedImage!);
-      const file = new File([blob], 'captured.jpg', { type: blob.type });
-      const data = await uploadImage(file);
-      setPublicId(data.public_id);
-      setUploadedImgUrl(data.secure_url);
-      setEtag(data.etag);
-      setMode('idle');
-    } catch (err) {
-      console.error('Upload failed', err);
-      toast.error('Failed to upload captured image.');
+      await uploadFile(file);
+    } catch (error) {
+      console.error('Upload failed', error);
     }
   };
 
@@ -53,17 +56,16 @@ export default function UploadClient() {
     return new Blob([u8arr], { type: mime });
   }
 
-  const handleFileChange = async (e: ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
+  // 카메라 캡쳐
+  const handleConfirm = async () => {
     try {
-      const data = await uploadImage(file);
-      setPublicId(data.public_id);
-      setUploadedImgUrl(data.secure_url);
-      setEtag(data.etag);
-    } catch (error) {
-      console.error('Upload failed', error);
+      const blob = dataURLtoBlob(capturedImage!);
+      const file = new File([blob], 'captured.jpg', { type: blob.type });
+      await uploadFile(file);
+      setMode('idle');
+    } catch (err) {
+      console.error('Upload failed', err);
+      toast.error('Failed to upload captured image.');
     }
   };
 
