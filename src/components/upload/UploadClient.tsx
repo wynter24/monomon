@@ -5,10 +5,10 @@ import UploadPreview from './UploadPreview';
 import Loading from '../common/Loading';
 import { useUploadMutation } from './hooks/useUploadMutation';
 import { toast } from 'sonner';
-import { uploadImage } from '@/api/uploadImage';
 import UploadActions from './UploadActions';
 import CameraMode from './CameraMode';
 import PreviewScreen from './PreviewScreen';
+import { useImageUpload } from '@/hooks/useImageUpload';
 
 export default function UploadClient() {
   const inputRef = useRef<HTMLInputElement>(null);
@@ -25,18 +25,25 @@ export default function UploadClient() {
     setMode('preview');
   };
 
-  const handleConfirm = async () => {
+  const { uploadFile, uploading } = useImageUpload(
+    ({ publicId, secureUrl, etag }) => {
+      setPublicId(publicId);
+      setUploadedImgUrl(secureUrl);
+      setEtag(etag);
+    },
+  );
+
+  // 파일 선택
+  const handleFileChange = async (e: ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || uploading) return;
+
     try {
-      const blob = dataURLtoBlob(capturedImage!);
-      const file = new File([blob], 'captured.jpg', { type: blob.type });
-      const data = await uploadImage(file);
-      setPublicId(data.public_id);
-      setUploadedImgUrl(data.secure_url);
-      setEtag(data.etag);
-      setMode('idle');
-    } catch (err) {
-      console.error('Upload failed', err);
-      toast.error('Failed to upload captured image.');
+      await uploadFile(file);
+    } catch {
+      toast.error('Failed to upload image.');
+    } finally {
+      if (inputRef.current) inputRef.current.value = ''; // 같은 파일 재선택 가능
     }
   };
 
@@ -53,17 +60,17 @@ export default function UploadClient() {
     return new Blob([u8arr], { type: mime });
   }
 
-  const handleFileChange = async (e: ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
+  // 카메라 캡쳐
+  const handleConfirm = async () => {
+    if (!capturedImage || uploading) return;
     try {
-      const data = await uploadImage(file);
-      setPublicId(data.public_id);
-      setUploadedImgUrl(data.secure_url);
-      setEtag(data.etag);
-    } catch (error) {
-      console.error('Upload failed', error);
+      const blob = dataURLtoBlob(capturedImage!);
+      const file = new File([blob], 'captured.jpg', { type: blob.type });
+      await uploadFile(file);
+      setMode('idle');
+      setCapturedImage(null);
+    } catch {
+      toast.error('Failed to upload captured image.');
     }
   };
 
@@ -76,7 +83,10 @@ export default function UploadClient() {
       <CameraMode
         videoRef={videoRef}
         onCapture={handleCapture}
-        onCancel={() => setMode('idle')}
+        onCancel={() => {
+          setMode('idle');
+          setCapturedImage(null);
+        }}
       />
     );
   }
@@ -85,11 +95,17 @@ export default function UploadClient() {
     return (
       <PreviewScreen
         image={capturedImage}
-        onRetake={() => setMode('camera')}
+        onRetake={() => {
+          setMode('camera');
+          setCapturedImage(null);
+        }}
         onConfirm={handleConfirm}
       />
     );
   }
+
+  const canFind =
+    Boolean(uploadedImgUrl && etag) && !mutation.isPending && !uploading;
 
   return (
     <section
@@ -122,7 +138,7 @@ export default function UploadClient() {
           inputRef={inputRef}
         />
         <UploadActions
-          disabled={!publicId}
+          disabled={!canFind}
           onUploadClick={() => inputRef.current?.click()}
           onCaptureClick={() => setMode('camera')}
           onFindClick={() => {

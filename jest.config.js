@@ -10,8 +10,8 @@ const createJestConfig = nextJest({
 const config = {
   coverageProvider: 'v8',
   testEnvironment: 'jsdom',
-  // 각 테스트가 실행되기 전에 추가 설정 옵션을 추가합니다.
-  // setupFilesAfterEnv: ['<rootDir>/jest.setup.ts'],
+  setupFilesAfterEnv: ['<rootDir>/src/test/setup.ts'],
+  moduleNameMapper: { '^@/(.*)$': '<rootDir>/src/$1' },
 }
 
 // next/jest가 Next.js 구성을 로드할 수 있도록 createJestConfig가 이 방식으로 내보내집니다.
