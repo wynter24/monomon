@@ -25,21 +25,25 @@ export default function UploadClient() {
     setMode('preview');
   };
 
-  const { uploadFile } = useImageUpload(({ publicId, secureUrl, etag }) => {
-    setPublicId(publicId);
-    setUploadedImgUrl(secureUrl);
-    setEtag(etag);
-  });
+  const { uploadFile, uploading } = useImageUpload(
+    ({ publicId, secureUrl, etag }) => {
+      setPublicId(publicId);
+      setUploadedImgUrl(secureUrl);
+      setEtag(etag);
+    },
+  );
 
   // 파일 선택
   const handleFileChange = async (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (!file) return;
+    if (!file || uploading) return;
 
     try {
       await uploadFile(file);
-    } catch (error) {
-      console.error('Upload failed', error);
+    } catch {
+      toast.error('Failed to upload image.');
+    } finally {
+      if (inputRef.current) inputRef.current.value = ''; // 같은 파일 재선택 가능
     }
   };
 
@@ -58,13 +62,14 @@ export default function UploadClient() {
 
   // 카메라 캡쳐
   const handleConfirm = async () => {
+    if (!capturedImage || uploading) return;
     try {
       const blob = dataURLtoBlob(capturedImage!);
       const file = new File([blob], 'captured.jpg', { type: blob.type });
       await uploadFile(file);
       setMode('idle');
-    } catch (err) {
-      console.error('Upload failed', err);
+      setCapturedImage(null);
+    } catch {
       toast.error('Failed to upload captured image.');
     }
   };
@@ -78,7 +83,10 @@ export default function UploadClient() {
       <CameraMode
         videoRef={videoRef}
         onCapture={handleCapture}
-        onCancel={() => setMode('idle')}
+        onCancel={() => {
+          setMode('idle');
+          setCapturedImage(null);
+        }}
       />
     );
   }
@@ -87,11 +95,17 @@ export default function UploadClient() {
     return (
       <PreviewScreen
         image={capturedImage}
-        onRetake={() => setMode('camera')}
+        onRetake={() => {
+          setMode('camera');
+          setCapturedImage(null);
+        }}
         onConfirm={handleConfirm}
       />
     );
   }
+
+  const canFind =
+    Boolean(uploadedImgUrl && etag) && !mutation.isPending && !uploading;
 
   return (
     <section
@@ -124,7 +138,7 @@ export default function UploadClient() {
           inputRef={inputRef}
         />
         <UploadActions
-          disabled={!publicId}
+          disabled={!canFind}
           onUploadClick={() => inputRef.current?.click()}
           onCaptureClick={() => setMode('camera')}
           onFindClick={() => {
