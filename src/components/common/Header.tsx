@@ -1,45 +1,148 @@
 'use client';
 
-import Image from 'next/image';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { useState } from 'react';
+import { User, LogOut, History, BookOpen } from 'lucide-react';
+import LoginModal from './LoginModal';
 
 export default function Header() {
-  const pathname = usePathname();
-  const isLanding = pathname === '/';
+  const router = useRouter();
+  const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
+  const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
 
-  if (isLanding) return null;
+  // TODO: 실제 사용자 상태로 교체
+  const user: { email: string } | null = null; // 임시로 null로 설정
+
+  // 사용자 메뉴에서 email 표시를 위한 안전한 접근
+  const userEmail = '사용자'; // 임시로 고정값 사용
+
+  const handleSignOut = async () => {
+    // TODO: 로그아웃 로직 구현
+    console.log('로그아웃');
+    setIsUserMenuOpen(false);
+    router.push('/');
+  };
+
+  const handleHistory = () => {
+    setIsUserMenuOpen(false);
+  };
+
+  const handlePokedex = () => {
+    setIsUserMenuOpen(false);
+  };
 
   return (
-    <header className="bg-yellow w-full px-4">
-      <nav
-        className="mx-auto flex max-w-4xl items-center justify-between px-4"
-        aria-label="main navigation"
+    <>
+      <header
+        className="fixed top-0 right-0 left-0 z-40 border-b border-gray-200 bg-white/95 backdrop-blur-sm"
+        role="banner"
       >
-        <Link
-          href={'/upload'}
-          className="relative h-16 w-16 sm:h-20 sm:w-20 md:h-24 md:w-24"
+        <nav
+          className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8"
+          aria-label="Main navigation"
         >
-          <Image
-            src="/images/logo.png"
-            alt="Monomon logo"
-            fill
-            className="object-contain"
-            priority
-          />
-        </Link>
-
-        <ul>
-          <li>
+          <div className="flex h-16 items-center justify-between">
+            {/* 로고 */}
             <Link
-              href={'/upload'}
-              className="text-ms md:2xl font-medium sm:text-xl"
+              href="/"
+              className="flex cursor-pointer items-center"
+              aria-label="Go to homepage"
             >
-              Home
+              <span className="text-yellow text-2xl font-bold">monomon</span>
             </Link>
-          </li>
-        </ul>
-      </nav>
-    </header>
+
+            {/* 로그인/사용자 메뉴 */}
+            <div className="flex items-center">
+              {user ? (
+                <div className="relative">
+                  <button
+                    onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
+                    className="flex items-center space-x-2 rounded-full p-2 transition-colors hover:bg-gray-100"
+                    aria-label="User menu"
+                    aria-expanded={isUserMenuOpen}
+                    aria-haspopup="true"
+                  >
+                    <div className="bg-yellow flex h-8 w-8 items-center justify-center rounded-full">
+                      <User className="h-5 w-5 text-black" />
+                    </div>
+                  </button>
+
+                  {isUserMenuOpen && (
+                    <div
+                      className="absolute right-0 z-50 mt-2 w-48 rounded-lg border border-gray-200 bg-white py-2 shadow-lg"
+                      role="menu"
+                      aria-orientation="vertical"
+                      aria-labelledby="user-menu-button"
+                    >
+                      <div className="border-b border-gray-100 px-4 py-2">
+                        <p
+                          className="text-sm font-medium text-gray-900"
+                          id="user-menu-button"
+                        >
+                          {userEmail}
+                        </p>
+                      </div>
+
+                      <ul role="none">
+                        <li role="none">
+                          <Link
+                            href="/history"
+                            onClick={handleHistory}
+                            className="flex w-full items-center space-x-3 px-4 py-2 text-left text-sm text-gray-700 transition-colors hover:bg-gray-50"
+                            role="menuitem"
+                          >
+                            <History className="h-4 w-4" />
+                            <span>분석 히스토리</span>
+                          </Link>
+                        </li>
+
+                        <li role="none">
+                          <Link
+                            href="/pokedex"
+                            onClick={handlePokedex}
+                            className="flex w-full items-center space-x-3 px-4 py-2 text-left text-sm text-gray-700 transition-colors hover:bg-gray-50"
+                            role="menuitem"
+                          >
+                            <BookOpen className="h-4 w-4" />
+                            <span>포켓몬 도감</span>
+                          </Link>
+                        </li>
+
+                        <li role="none">
+                          <button
+                            onClick={handleSignOut}
+                            className="flex w-full items-center space-x-3 px-4 py-2 text-left text-sm text-red-600 transition-colors hover:bg-red-50"
+                            role="menuitem"
+                          >
+                            <LogOut className="h-4 w-4" />
+                            <span>로그아웃</span>
+                          </button>
+                        </li>
+                      </ul>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <button
+                  onClick={() => setIsLoginModalOpen(true)}
+                  className="bg-yellow hover:bg-yellow-darker flex items-center space-x-2 rounded-lg px-4 py-2 font-medium text-black transition-colors"
+                  aria-label="Open login modal"
+                >
+                  <User className="h-4 w-4" />
+                  <span>로그인</span>
+                </button>
+              )}
+            </div>
+          </div>
+        </nav>
+      </header>
+
+      {/* 로그인 모달 */}
+      <LoginModal
+        isOpen={isLoginModalOpen}
+        onClose={() => setIsLoginModalOpen(false)}
+      />
+    </>
   );
 }

@@ -109,7 +109,7 @@ export default function UploadClient() {
 
   return (
     <section
-      className="container mx-auto flex max-w-4xl flex-col gap-6 p-4 sm:gap-16 sm:py-12"
+      className="container mx-auto flex max-w-4xl flex-col gap-11 px-4 pt-20 pb-12"
       aria-label="Photo selection area"
     >
       <h1 className="text-xl font-medium sm:text-2xl">Upload Photo</h1>
