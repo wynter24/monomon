@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import Image from 'next/image';
 import { X, Github, Chrome } from 'lucide-react';
+import { supabaseBrowser } from '@/lib/supabaseBrowser';
 
 interface LoginModalProps {
   isOpen: boolean;
@@ -13,15 +14,23 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
   const [isLoading, setIsLoading] = useState(false);
 
   const handleOAuthLogin = async (provider: 'google' | 'github') => {
-    setIsLoading(true);
-    // TODO: OAuth 로그인 로직 구현
-    console.log(`${provider} 로그인 시도`);
+    try {
+      setIsLoading(true);
+      const { error } = await supabaseBrowser.auth.signInWithOAuth({
+        provider,
+        options: {
+          redirectTo: `${window.location.origin}/auth/callback`,
 
-    // 로딩 상태 시뮬레이션
-    setTimeout(() => {
+          queryParams: { access_type: 'offline', prompt: 'consent' },
+        },
+      });
+      if (error) throw error;
+      // 여기서 페이지 이동은 Supabase가 처리함(구글 → 콜백)
+    } catch (e) {
+      console.error(e);
+      alert('로그인에 실패했어요. 잠시 후 다시 시도해 주세요.');
       setIsLoading(false);
-      onClose();
-    }, 2000);
+    }
   };
 
   if (!isOpen) return null;

@@ -1,4 +1,3 @@
-import { fetchResultFromSupabase } from '@/lib/supabaseClient';
 import ResultClient from '@/components/result/ResultClient';
 
 type Params = Promise<{ id: string }>;
@@ -6,12 +5,17 @@ type Params = Promise<{ id: string }>;
 // SNS 메타태그 자동 생성
 export async function generateMetadata({ params }: { params: Params }) {
   const { id } = await params;
-  const result = await fetchResultFromSupabase(id);
+
+  const res = await fetch(
+    `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/result/${id}`,
+    { cache: 'no-store' },
+  );
+  const result = res.ok ? await res.json().then((data) => data.result) : null;
 
   if (!result) {
     return {
       title: 'No Result Available',
-      description: 'Sorry, we couldn’t find the result you’re looking for.',
+      description: "Sorry, we couldn't find the result you're looking for.",
     };
   }
 

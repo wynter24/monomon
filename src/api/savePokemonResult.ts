@@ -1,11 +1,15 @@
-import { supabase } from '@/lib/supabaseClient';
+import { supabaseBrowser } from '@/lib/supabaseBrowser';
 import { MatchResult } from '@/types/pokemon';
+import type { SupabaseClient } from '@supabase/supabase-js';
+import type { Database } from '@/types/supabase';
 
 export async function savePokemonResult(
   // imageUrl: string,
   etag: string,
   matchResult: MatchResult,
+  supabaseClient?: SupabaseClient<Database>,
 ) {
+  const supabase = supabaseClient || supabaseBrowser;
   const { data, error } = await supabase
     .from('image_results')
     .upsert(

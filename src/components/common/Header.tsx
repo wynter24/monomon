@@ -2,20 +2,38 @@
 
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { useState } from 'react';
-import { User, LogOut, History, BookOpen } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { User as UserIcon, LogOut, History, BookOpen } from 'lucide-react';
+import type { User as SupabaseUser } from '@supabase/supabase-js';
 import LoginModal from './LoginModal';
+import { supabaseBrowser } from '@/lib/supabaseBrowser';
 
-export default function Header() {
+export default function Header({
+  initialUser,
+}: {
+  initialUser: SupabaseUser | null;
+}) {
+  const [user, setUser] = useState(initialUser);
   const router = useRouter();
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
 
-  // TODO: 실제 사용자 상태로 교체
-  const user: { email: string } | null = null; // 임시로 null로 설정
+  useEffect(() => {
+    const supabase = supabaseBrowser;
 
-  // 사용자 메뉴에서 email 표시를 위한 안전한 접근
-  const userEmail = '사용자'; // 임시로 고정값 사용
+    // 최신 세션 재확인(선택)
+    supabase.auth.getUser().then(({ data }) => {
+      if (data.user?.id !== user?.id) setUser(data.user ?? null);
+    });
+
+    // 로그인/로그아웃/토큰갱신 반영
+    const { data: sub } = supabase.auth.onAuthStateChange((_e, session) => {
+      setUser(session?.user ?? null);
+    });
+    return () => sub.subscription.unsubscribe();
+  }, []); // eslint-disable-line
+
+  const userEmail = user?.email ?? '사용자';
 
   const handleSignOut = async () => {
     // TODO: 로그아웃 로직 구현
@@ -64,7 +82,7 @@ export default function Header() {
                     aria-haspopup="true"
                   >
                     <div className="bg-yellow flex h-8 w-8 items-center justify-center rounded-full">
-                      <User className="h-5 w-5 text-black" />
+                      <UserIcon className="h-5 w-5 text-black" />
                     </div>
                   </button>
 
@@ -129,7 +147,7 @@ export default function Header() {
                   className="bg-yellow hover:bg-yellow-darker flex items-center space-x-2 rounded-lg px-4 py-2 font-medium text-black transition-colors"
                   aria-label="Open login modal"
                 >
-                  <User className="h-4 w-4" />
+                  <UserIcon className="h-4 w-4" />
                   <span>로그인</span>
                 </button>
               )}

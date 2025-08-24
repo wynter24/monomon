@@ -2,7 +2,7 @@ import type { MatchResult } from '@/types/pokemon';
 import { savePokemonResult } from './savePokemonResult';
 
 // supabase 클라이언트 모듈을 통채로 mock
-jest.mock('@/lib/supabaseClient', () => {
+jest.mock('@/lib/supabaseBrowser', () => {
   return {
     supabase: {
       from: jest.fn(),
@@ -34,7 +34,7 @@ function makeFetchChain<T>(resolved: MaybeSingleResult<T>) {
 }
 
 describe('savePokemonResult', () => {
-  const { supabase } = jest.requireMock('@/lib/supabaseClient') as {
+  const { supabase } = jest.requireMock('@/lib/supabaseBrowser') as {
     supabase: { from: jest.Mock };
   };
 
