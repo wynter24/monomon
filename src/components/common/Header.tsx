@@ -7,6 +7,7 @@ import { User as UserIcon, LogOut, History, BookOpen } from 'lucide-react';
 import type { User as SupabaseUser } from '@supabase/supabase-js';
 import LoginModal from './LoginModal';
 import { supabaseBrowser } from '@/lib/supabaseBrowser';
+import { toast } from 'sonner';
 
 export default function Header({
   initialUser,
@@ -36,10 +37,18 @@ export default function Header({
   const userEmail = user?.email ?? '사용자';
 
   const handleSignOut = async () => {
-    // TODO: 로그아웃 로직 구현
-    console.log('로그아웃');
-    setIsUserMenuOpen(false);
-    router.push('/');
+    try {
+      const { error } = await supabaseBrowser.auth.signOut();
+      if (error) throw error;
+
+      setIsUserMenuOpen(false);
+      setTimeout(() => {
+        router.push('/');
+      }, 2000);
+      toast.success('You are logout. See you again🖐️');
+    } catch {
+      toast.error('Failed to logout');
+    }
   };
 
   const handleHistory = () => {
