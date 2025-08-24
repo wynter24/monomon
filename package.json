@@ -21,7 +21,8 @@
     ]
   },
   "dependencies": {
-    "@supabase/supabase-js": "^2.52.0",
+    "@supabase/ssr": "^0.7.0",
+    "@supabase/supabase-js": "^2.56.0",
     "@tanstack/react-query": "^5.83.0",
     "@tanstack/react-query-devtools": "^5.83.0",
     "axios": "^1.10.0",
