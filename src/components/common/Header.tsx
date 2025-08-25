@@ -2,12 +2,14 @@
 
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { User as UserIcon, LogOut, History, BookOpen } from 'lucide-react';
 import type { User as SupabaseUser } from '@supabase/supabase-js';
 import LoginModal from './LoginModal';
 import { supabaseBrowser } from '@/lib/supabaseBrowser';
 import { toast } from 'sonner';
+import { useMobile } from '@/hooks/useMobile';
+import Portal from './Portal';
 
 export default function Header({
   initialUser,
@@ -18,6 +20,26 @@ export default function Header({
   const router = useRouter();
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
+  const isMobile = useMobile();
+
+  // 1) 버튼 ref + 간단한 위치 상태
+  const btnRef = useRef<HTMLButtonElement>(null);
+  const [menuStyle, setMenuStyle] = useState<React.CSSProperties>({});
+
+  // 2) 메뉴가 열릴 때 한 번만 위치 계산
+  useEffect(() => {
+    if (!isUserMenuOpen || !btnRef.current) return;
+    const r = btnRef.current.getBoundingClientRect();
+    const GAP = 8; // 버튼과 메뉴 사이
+    setMenuStyle({
+      position: 'fixed',
+      top: r.bottom + GAP,
+      left: r.right,
+      transform: 'translateX(-100%)', // 오른쪽 끝 정렬 (bottom-end)
+      zIndex: 9999,
+      width: 192, // w-48
+    });
+  }, [isUserMenuOpen]);
 
   useEffect(() => {
     const supabase = supabaseBrowser;
@@ -34,7 +56,7 @@ export default function Header({
     return () => sub.subscription.unsubscribe();
   }, []); // eslint-disable-line
 
-  const userEmail = user?.email ?? '사용자';
+  const userEmail = user?.email ?? 'User';
 
   const handleSignOut = async () => {
     try {
@@ -45,9 +67,9 @@ export default function Header({
       setTimeout(() => {
         router.push('/');
       }, 2000);
-      toast.success('You are logout. See you again🖐️');
+      toast.success('You are logged out. See you again🖐️');
     } catch {
-      toast.error('Failed to logout');
+      toast.error('Failed to sign out');
     }
   };
 
@@ -82,8 +104,30 @@ export default function Header({
             {/* 로그인/사용자 메뉴 */}
             <div className="flex items-center">
               {user ? (
-                <div className="relative">
+                <div className="relative sm:flex">
+                  {/* Desktop/Tablet inline nav items */}
+                  {!isMobile && (
+                    <div className="mr-4 hidden items-center space-x-4 sm:flex">
+                      <Link
+                        href="/history"
+                        onClick={handleHistory}
+                        className="flex items-center space-x-2 text-sm text-gray-700 transition-colors hover:text-gray-900"
+                        aria-label="Go to analysis history"
+                      >
+                        <span>Analysis history</span>
+                      </Link>
+                      <Link
+                        href="/pokedex"
+                        onClick={handlePokedex}
+                        className="flex items-center space-x-2 text-sm text-gray-700 transition-colors hover:text-gray-900"
+                        aria-label="Go to Pokédex"
+                      >
+                        <span>Pokédex</span>
+                      </Link>
+                    </div>
+                  )}
                   <button
+                    ref={btnRef}
                     onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
                     className="flex items-center space-x-2 rounded-full p-2 transition-colors hover:bg-gray-100"
                     aria-label="User menu"
@@ -96,58 +140,69 @@ export default function Header({
                   </button>
 
                   {isUserMenuOpen && (
-                    <div
-                      className="absolute right-0 z-50 mt-2 w-48 rounded-lg border border-gray-200 bg-white py-2 shadow-lg"
-                      role="menu"
-                      aria-orientation="vertical"
-                      aria-labelledby="user-menu-button"
-                    >
-                      <div className="border-b border-gray-100 px-4 py-2">
-                        <p
-                          className="text-sm font-medium text-gray-900"
-                          id="user-menu-button"
-                        >
-                          {userEmail}
-                        </p>
+                    <Portal>
+                      <div
+                        className="fixed inset-0 z-50 bg-black/0"
+                        onClick={() => setIsUserMenuOpen(false)}
+                        aria-hidden="true"
+                      />
+                      <div
+                        className="rounded-lg border border-gray-200 bg-white py-2 shadow-lg"
+                        role="menu"
+                        style={menuStyle}
+                        aria-orientation="vertical"
+                        aria-labelledby="user-menu-button"
+                      >
+                        <div className="border-b border-gray-100 px-4 py-2">
+                          <p
+                            className="text-sm font-medium text-gray-900"
+                            id="user-menu-button"
+                          >
+                            {userEmail}
+                          </p>
+                        </div>
+
+                        <ul role="none">
+                          {isMobile && (
+                            <>
+                              <li role="none">
+                                <Link
+                                  href="/history"
+                                  onClick={handleHistory}
+                                  className="flex w-full items-center space-x-3 px-4 py-2 text-left text-sm text-gray-700 transition-colors hover:bg-gray-50"
+                                  role="menuitem"
+                                >
+                                  <History className="h-4 w-4" />
+                                  <span>Analysis history</span>
+                                </Link>
+                              </li>
+                              <li role="none">
+                                <Link
+                                  href="/pokedex"
+                                  onClick={handlePokedex}
+                                  className="flex w-full items-center space-x-3 px-4 py-2 text-left text-sm text-gray-700 transition-colors hover:bg-gray-50"
+                                  role="menuitem"
+                                >
+                                  <BookOpen className="h-4 w-4" />
+                                  <span>Pokédex</span>
+                                </Link>
+                              </li>
+                            </>
+                          )}
+
+                          <li role="none">
+                            <button
+                              onClick={handleSignOut}
+                              className="flex w-full items-center space-x-3 px-4 py-2 text-left text-sm text-red-600 transition-colors hover:bg-red-50"
+                              role="menuitem"
+                            >
+                              <LogOut className="h-4 w-4" />
+                              <span>Sign out</span>
+                            </button>
+                          </li>
+                        </ul>
                       </div>
-
-                      <ul role="none">
-                        <li role="none">
-                          <Link
-                            href="/history"
-                            onClick={handleHistory}
-                            className="flex w-full items-center space-x-3 px-4 py-2 text-left text-sm text-gray-700 transition-colors hover:bg-gray-50"
-                            role="menuitem"
-                          >
-                            <History className="h-4 w-4" />
-                            <span>분석 히스토리</span>
-                          </Link>
-                        </li>
-
-                        <li role="none">
-                          <Link
-                            href="/pokedex"
-                            onClick={handlePokedex}
-                            className="flex w-full items-center space-x-3 px-4 py-2 text-left text-sm text-gray-700 transition-colors hover:bg-gray-50"
-                            role="menuitem"
-                          >
-                            <BookOpen className="h-4 w-4" />
-                            <span>포켓몬 도감</span>
-                          </Link>
-                        </li>
-
-                        <li role="none">
-                          <button
-                            onClick={handleSignOut}
-                            className="flex w-full items-center space-x-3 px-4 py-2 text-left text-sm text-red-600 transition-colors hover:bg-red-50"
-                            role="menuitem"
-                          >
-                            <LogOut className="h-4 w-4" />
-                            <span>로그아웃</span>
-                          </button>
-                        </li>
-                      </ul>
-                    </div>
+                    </Portal>
                   )}
                 </div>
               ) : (
@@ -157,7 +212,7 @@ export default function Header({
                   aria-label="Open login modal"
                 >
                   <UserIcon className="h-4 w-4" />
-                  <span>로그인</span>
+                  <span>Sign in</span>
                 </button>
               )}
             </div>

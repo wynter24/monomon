@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import Image from 'next/image';
-import { X, Github, Chrome } from 'lucide-react';
+import { X, Chrome } from 'lucide-react';
 import { supabaseBrowser } from '@/lib/supabaseBrowser';
 
 interface LoginModalProps {
@@ -13,7 +13,7 @@ interface LoginModalProps {
 export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
   const [isLoading, setIsLoading] = useState(false);
 
-  const handleOAuthLogin = async (provider: 'google' | 'github') => {
+  const handleOAuthLogin = async (provider: 'google') => {
     try {
       setIsLoading(true);
       const { error } = await supabaseBrowser.auth.signInWithOAuth({
@@ -26,9 +26,8 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
       });
       if (error) throw error;
       // 여기서 페이지 이동은 Supabase가 처리함(구글 → 콜백)
-    } catch (e) {
-      console.error(e);
-      alert('로그인에 실패했어요. 잠시 후 다시 시도해 주세요.');
+    } catch {
+      alert('Login failed. Please try again later.');
       setIsLoading(false);
     }
   };
@@ -65,10 +64,10 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
             />
           </div>
           <h2 className="mb-2 text-2xl font-bold text-gray-900">
-            monomon에 로그인
+            Sign in to Monomon
           </h2>
           <p className="text-sm text-gray-600">
-            로그인하고 분석 결과를 저장하고 포켓몬 도감을 확인해보세요
+            Sign in to save analysis results and view your Pokédex.
           </p>
         </div>
 
@@ -80,23 +79,23 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
             className="flex w-full items-center justify-center space-x-3 rounded-xl border-2 border-gray-300 bg-white px-4 py-3 font-medium text-gray-700 transition-all duration-200 hover:border-gray-400 hover:shadow-md disabled:cursor-not-allowed disabled:opacity-50"
           >
             <Chrome className="h-5 w-5" />
-            <span>Google로 계속하기</span>
+            <span>Continue with Google</span>
           </button>
 
-          <button
+          {/* <button
             onClick={() => handleOAuthLogin('github')}
             disabled={isLoading}
             className="flex w-full items-center justify-center space-x-3 rounded-xl bg-gray-900 px-4 py-3 font-medium text-white transition-all duration-200 hover:bg-gray-800 hover:shadow-md disabled:cursor-not-allowed disabled:opacity-50"
           >
             <Github className="h-5 w-5" />
-            <span>GitHub로 계속하기</span>
-          </button>
+            <span>Continue with GitHub</span>
+          </button> */}
         </div>
 
         {/* 안내 메시지 */}
         <div className="mt-6 text-center">
           <p className="text-xs text-gray-500">
-            로그인하지 않아도 기본 분석 서비스를 이용할 수 있습니다
+            You can use the basic analysis service without signing in.
           </p>
         </div>
 
@@ -104,7 +103,7 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
         {isLoading && (
           <div className="mt-4 text-center">
             <div className="inline-block h-5 w-5 animate-spin rounded-full border-b-2 border-yellow-600"></div>
-            <p className="mt-2 text-sm text-gray-600">로그인 중...</p>
+            <p className="mt-2 text-sm text-gray-600">Signing in...</p>
           </div>
         )}
       </div>
