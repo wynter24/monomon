@@ -2,7 +2,7 @@ export default function CaptureTips() {
   return (
     <section aria-labelledby="upload-tips-heading">
       <h2
-        id="upload-tips-heading"
+        id="match-tips-heading"
         className="mb-3 text-xs font-medium tracking-wide text-gray-500 sm:text-sm"
       >
         How to get the best match
