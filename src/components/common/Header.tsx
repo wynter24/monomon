@@ -8,7 +8,6 @@ import type { User as SupabaseUser } from '@supabase/supabase-js';
 import LoginModal from './LoginModal';
 import { supabaseBrowser } from '@/lib/supabaseBrowser';
 import { toast } from 'sonner';
-import { useMobile } from '@/hooks/useMobile';
 import Portal from './Portal';
 
 export default function Header({
@@ -20,7 +19,6 @@ export default function Header({
   const router = useRouter();
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
-  const isMobile = useMobile();
 
   // 1) 버튼 ref + 간단한 위치 상태
   const btnRef = useRef<HTMLButtonElement>(null);
@@ -105,27 +103,15 @@ export default function Header({
             <div className="flex items-center">
               {user ? (
                 <div className="relative sm:flex">
-                  {/* Desktop/Tablet inline nav items */}
-                  {!isMobile && (
-                    <div className="mr-4 hidden items-center space-x-4 sm:flex">
-                      <Link
-                        href="/history"
-                        onClick={handleHistory}
-                        className="flex items-center space-x-2 text-sm text-gray-700 transition-colors hover:text-gray-900"
-                        aria-label="Go to analysis history"
-                      >
-                        <span>Analysis history</span>
-                      </Link>
-                      <Link
-                        href="/pokedex"
-                        onClick={handlePokedex}
-                        className="flex items-center space-x-2 text-sm text-gray-700 transition-colors hover:text-gray-900"
-                        aria-label="Go to Pokédex"
-                      >
-                        <span>Pokédex</span>
-                      </Link>
-                    </div>
-                  )}
+                  <div className="mr-4 hidden items-center space-x-4 sm:flex">
+                    <Link
+                      href="/upload"
+                      className="flex items-center space-x-2 text-sm text-gray-700 transition-colors hover:text-gray-900 sm:text-base"
+                      aria-label="Go to analysis history"
+                    >
+                      <span>Match</span>
+                    </Link>
+                  </div>
                   <button
                     ref={btnRef}
                     onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
@@ -163,32 +149,28 @@ export default function Header({
                         </div>
 
                         <ul role="none">
-                          {isMobile && (
-                            <>
-                              <li role="none">
-                                <Link
-                                  href="/history"
-                                  onClick={handleHistory}
-                                  className="flex w-full items-center space-x-3 px-4 py-2 text-left text-sm text-gray-700 transition-colors hover:bg-gray-50"
-                                  role="menuitem"
-                                >
-                                  <History className="h-4 w-4" />
-                                  <span>Analysis history</span>
-                                </Link>
-                              </li>
-                              <li role="none">
-                                <Link
-                                  href="/pokedex"
-                                  onClick={handlePokedex}
-                                  className="flex w-full items-center space-x-3 px-4 py-2 text-left text-sm text-gray-700 transition-colors hover:bg-gray-50"
-                                  role="menuitem"
-                                >
-                                  <BookOpen className="h-4 w-4" />
-                                  <span>Pokédex</span>
-                                </Link>
-                              </li>
-                            </>
-                          )}
+                          <li role="none">
+                            <Link
+                              href="/history"
+                              onClick={handleHistory}
+                              className="flex w-full items-center space-x-3 px-4 py-2 text-left text-sm text-gray-700 transition-colors hover:bg-gray-50"
+                              role="menuitem"
+                            >
+                              <History className="h-4 w-4" />
+                              <span>Analysis history</span>
+                            </Link>
+                          </li>
+                          <li role="none">
+                            <Link
+                              href="/pokedex"
+                              onClick={handlePokedex}
+                              className="flex w-full items-center space-x-3 px-4 py-2 text-left text-sm text-gray-700 transition-colors hover:bg-gray-50"
+                              role="menuitem"
+                            >
+                              <BookOpen className="h-4 w-4" />
+                              <span>Pokédex</span>
+                            </Link>
+                          </li>
 
                           <li role="none">
                             <button

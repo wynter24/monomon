@@ -12,7 +12,7 @@ export default function Footer() {
 
   return (
     <footer className="bg-yellow w-full px-4 text-black" aria-label="site info">
-      <div className="mx-auto max-w-4xl space-y-4 px-5 py-10">
+      <div className="mx-auto max-w-7xl space-y-4 px-5 py-10">
         <p className="text-lg font-semibold sm:text-xl">
           Find your Pokémon twin with Monomon
         </p>
