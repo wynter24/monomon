@@ -42,17 +42,12 @@ export default function Header({
   useEffect(() => {
     const supabase = supabaseBrowser;
 
-    // 최신 세션 재확인(선택)
-    supabase.auth.getUser().then(({ data }) => {
-      if (data.user?.id !== user?.id) setUser(data.user ?? null);
-    });
-
     // 로그인/로그아웃/토큰갱신 반영
     const { data: sub } = supabase.auth.onAuthStateChange((_e, session) => {
       setUser(session?.user ?? null);
     });
     return () => sub.subscription.unsubscribe();
-  }, []); // eslint-disable-line
+  }, []);
 
   const userEmail = user?.email ?? 'User';
 
