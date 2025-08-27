@@ -109,10 +109,18 @@ export default function UploadClient() {
 
   return (
     <section
-      className="container mx-auto flex max-w-4xl flex-col gap-6 p-4 sm:gap-16 sm:py-12"
+      className="container mx-auto flex max-w-4xl flex-col gap-5 px-4 pt-28 pb-12 md:gap-11"
       aria-label="Photo selection area"
     >
-      <h1 className="text-xl font-medium sm:text-2xl">Upload Photo</h1>
+      <header className="text-center">
+        <h1 className="text-2xl font-semibold md:text-3xl">
+          Find your Pokémon twin
+        </h1>
+        <p className="mt-2 text-sm text-gray-600 md:text-base">
+          Upload a clear photo to match your look{' '}
+          <span className="hidden md:inline">with a Pokémon</span>
+        </p>
+      </header>
 
       <div className="flex min-h-[60vh] flex-col items-center justify-center gap-11">
         <input
@@ -150,17 +158,6 @@ export default function UploadClient() {
           }}
         />
       </div>
-
-      <section aria-labelledby="upload-tips-heading">
-        <h2 id="upload-tips-heading" className="mb-3 text-sm sm:text-lg">
-          Tips for the Best Results
-        </h2>
-        <div className="text-gray-darker space-y-2 text-xs sm:text-sm">
-          <p>Ensure good lighting on your face.</p>
-          <p>Keep the camera at eye level for better angles.</p>
-          <p>Avoid background distractions.</p>
-        </div>
-      </section>
     </section>
   );
 }

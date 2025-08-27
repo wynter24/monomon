@@ -1,8 +1,11 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
+import { useMobile } from '@/hooks/useMobile';
 import { toast } from 'sonner';
 import { Camera, RefreshCw, FlipHorizontal, X } from 'lucide-react';
+import { twMerge } from 'tailwind-merge';
+import CaptureTips from './CaptureTips';
 
 interface Props {
   videoRef: React.RefObject<HTMLVideoElement | null>;
@@ -11,12 +14,14 @@ interface Props {
 }
 
 export default function CameraMode({ videoRef, onCapture, onCancel }: Props) {
+  const isMobile = useMobile();
   const [videoReady, setVideoReady] = useState(false);
   const [devices, setDevices] = useState<MediaDeviceInfo[]>([]);
   const [currentDeviceId, setCurrentDeviceId] = useState<string | null>(null);
   const [mirror, setMirror] = useState(true);
   const [isSwitching, setIsSwitching] = useState(false);
   const [needsUserAction, setNeedsUserAction] = useState(true);
+  const [isFrontCamera, setIsFrontCamera] = useState(true);
 
   const streamRef = useRef<MediaStream | null>(null);
   const startingRef = useRef<Promise<void> | null>(null);
@@ -96,7 +101,19 @@ export default function CameraMode({ videoRef, onCapture, onCancel }: Props) {
           const openedId = openedTrack.getSettings().deviceId as
             | string
             | undefined;
-          if (openedId) setCurrentDeviceId(openedId);
+          if (openedId) {
+            setCurrentDeviceId(openedId);
+            const openedLabel = (
+              vids.find((v) => v.deviceId === openedId)?.label || ''
+            ).toLowerCase();
+            if (openedLabel) {
+              setIsFrontCamera(/front|user|face|internal/.test(openedLabel));
+            } else if (opts?.facingMode) {
+              setIsFrontCamera(opts.facingMode === 'user');
+            }
+          } else if (opts?.facingMode) {
+            setIsFrontCamera(opts.facingMode === 'user');
+          }
         } catch {}
 
         setNeedsUserAction(false);
@@ -167,7 +184,11 @@ export default function CameraMode({ videoRef, onCapture, onCancel }: Props) {
       const nextLabel = (
         devices.find((d) => d.deviceId === nextId)?.label || ''
       ).toLowerCase();
-      if (nextLabel) setMirror(/front|user/.test(nextLabel));
+      if (nextLabel) {
+        const nextIsFront = /front|user|face|internal/.test(nextLabel);
+        setMirror(nextIsFront);
+        setIsFrontCamera(nextIsFront);
+      }
 
       // ★ 버튼 핸들러에서 직접 열기
       await startCamera({ deviceId: nextId });
@@ -180,6 +201,8 @@ export default function CameraMode({ videoRef, onCapture, onCancel }: Props) {
   const handleEnableCamera = async () => {
     try {
       await startCamera({ facingMode: 'user' });
+      setIsFrontCamera(true);
+      setMirror(true);
     } catch {}
   };
 
@@ -211,28 +234,99 @@ export default function CameraMode({ videoRef, onCapture, onCancel }: Props) {
 
   return (
     <section
-      className="mx-auto flex max-w-4xl flex-col items-center justify-center gap-6 px-4 py-10"
+      className="mx-auto flex max-w-4xl flex-col items-center justify-center gap-6 px-4 pt-28 pb-12"
       aria-label="Camera mode"
     >
-      <div className="relative aspect-[9/16] h-[70vh] w-full overflow-hidden rounded-lg bg-black sm:aspect-video">
-        <video
-          ref={videoRef}
-          autoPlay
-          playsInline
-          muted
-          aria-hidden="true"
-          onLoadedData={() => setVideoReady(true)}
-          className={`h-full w-full object-cover ${mirror ? 'scale-x-[-1]' : ''}`}
-        />
-        {isSwitching && (
-          <div
-            className="bg-opacity-50 absolute inset-0 flex items-center justify-center bg-black"
-            role="status"
-            aria-live="polite"
-          >
-            <div className="text-white">Switching camera...</div>
+      {/* Pokedex shell */}
+      <div className="relative aspect-[9/16] h-[70vh] w-full overflow-hidden rounded-2xl bg-red-600 shadow-[inset_0_0_0_3px_rgba(0,0,0,0.25)] sm:aspect-video">
+        {/* top indicator row */}
+        <div className="absolute inset-x-0 top-0 z-10 flex items-center justify-between px-4 py-3">
+          <div className="flex items-center gap-2">
+            <span className="inline-block h-4 w-4 rounded-full bg-blue-400 shadow-[inset_0_0_0_2px_rgba(255,255,255,0.6)]" />
+            <span className="inline-block h-2 w-2 rounded-full bg-yellow-300" />
+            <span className="inline-block h-2 w-2 rounded-full bg-green-300" />
           </div>
-        )}
+          <div className="h-1 w-24 rounded bg-red-700/60" />
+        </div>
+
+        {/* inner bezel */}
+        <div className="absolute inset-3 rounded-xl bg-red-700/40 p-3">
+          <div className="absolute inset-0 rounded-xl shadow-[inset_0_10px_30px_rgba(0,0,0,0.35),inset_0_-8px_24px_rgba(0,0,0,0.28)]" />
+
+          {/* screen */}
+          <div className="relative h-full w-full rounded-md bg-black">
+            <video
+              ref={videoRef}
+              autoPlay
+              playsInline
+              muted
+              aria-hidden="true"
+              onLoadedData={() => setVideoReady(true)}
+              className={`h-full w-full rounded-[6px] object-cover ${mirror ? 'scale-x-[-1]' : ''}`}
+            />
+            {isSwitching && (
+              <div
+                className="bg-opacity-50 absolute inset-0 flex items-center justify-center bg-black"
+                role="status"
+                aria-live="polite"
+              >
+                <div className="text-white">Switching camera...</div>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* bottom control dock */}
+        <div className="absolute inset-x-3 bottom-3 z-10">
+          <div className="rounded-xl bg-red-700/60 p-2 shadow-[inset_0_0_0_2px_rgba(0,0,0,0.15)]">
+            <div className="grid grid-cols-4 items-center gap-2 rounded-lg bg-neutral-900/90 p-2">
+              {/* Capture (primary big) */}
+              <button
+                onClick={capture}
+                disabled={!videoReady}
+                className={twMerge(
+                  'col-span-2 flex items-center justify-center rounded-full bg-yellow-400 py-3 text-neutral-900 transition hover:bg-yellow-300 disabled:opacity-50',
+                  isMobile && isFrontCamera && 'col-span-1',
+                )}
+                aria-label="Capture photo"
+              >
+                <Camera size={22} />
+              </button>
+
+              {/* Switch camera */}
+              <button
+                onClick={switchCamera}
+                disabled={isSwitching || devices.length < 2}
+                className="flex items-center justify-center rounded-md bg-neutral-700 p-3 text-white transition hover:bg-neutral-600 disabled:opacity-50 sm:hidden"
+                aria-label="Switch camera"
+              >
+                <RefreshCw
+                  size={18}
+                  className={isSwitching ? 'animate-spin' : ''}
+                />
+              </button>
+
+              {/* Mirror toggle: desktop(always) or mobile(front-only) */}
+              {(!isMobile || isFrontCamera) && (
+                <button
+                  onClick={() => setMirror((prev) => !prev)}
+                  className="flex items-center justify-center rounded-md bg-neutral-700 p-3 text-white transition hover:bg-neutral-600"
+                  aria-label="Toggle mirror mode"
+                >
+                  <FlipHorizontal size={18} />
+                </button>
+              )}
+
+              <button
+                onClick={handleCancel}
+                className="flex items-center justify-center rounded-md bg-neutral-700 p-3 text-white transition hover:bg-neutral-600"
+                aria-label="Cancel capture"
+              >
+                <X size={20} />
+              </button>
+            </div>
+          </div>
+        </div>
       </div>
 
       {needsUserAction && !videoReady && (
@@ -244,42 +338,7 @@ export default function CameraMode({ videoRef, onCapture, onCancel }: Props) {
           Enable camera
         </button>
       )}
-
-      <div className="flex items-center gap-4">
-        <button
-          onClick={capture}
-          disabled={!videoReady}
-          className="rounded-full bg-yellow-400 p-3 hover:bg-yellow-300 disabled:opacity-50"
-          aria-label="Capture photo"
-        >
-          <Camera size={24} />
-        </button>
-
-        <button
-          onClick={switchCamera}
-          disabled={isSwitching || devices.length < 2}
-          className="rounded-full bg-gray-200 p-3 hover:bg-gray-300 disabled:opacity-50 sm:hidden"
-          aria-label="Switch camera"
-        >
-          <RefreshCw size={20} className={isSwitching ? 'animate-spin' : ''} />
-        </button>
-
-        <button
-          onClick={() => setMirror((prev) => !prev)}
-          className="rounded-full bg-gray-200 p-3 hover:bg-gray-300"
-          aria-label="Toggle mirror mode"
-        >
-          <FlipHorizontal size={20} />
-        </button>
-
-        <button
-          onClick={handleCancel}
-          className="rounded-full bg-gray-200 p-3 hover:bg-gray-300"
-          aria-label="Cancel capture"
-        >
-          <X size={20} />
-        </button>
-      </div>
+      <CaptureTips />
     </section>
   );
 }

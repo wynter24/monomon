@@ -2,9 +2,9 @@ import type { MatchResult } from '@/types/pokemon';
 import { savePokemonResult } from './savePokemonResult';
 
 // supabase 클라이언트 모듈을 통채로 mock
-jest.mock('@/lib/supabaseClient', () => {
+jest.mock('@/lib/supabaseBrowser', () => {
   return {
-    supabase: {
+    supabaseBrowser: {
       from: jest.fn(),
     },
   };
@@ -34,8 +34,8 @@ function makeFetchChain<T>(resolved: MaybeSingleResult<T>) {
 }
 
 describe('savePokemonResult', () => {
-  const { supabase } = jest.requireMock('@/lib/supabaseClient') as {
-    supabase: { from: jest.Mock };
+  const { supabaseBrowser } = jest.requireMock('@/lib/supabaseBrowser') as {
+    supabaseBrowser: { from: jest.Mock };
   };
 
   const setNodeEnv = (v?: string) => {
@@ -74,7 +74,7 @@ describe('savePokemonResult', () => {
       error: null,
     });
 
-    supabase.from.mockImplementationOnce(() => upsertChain); // 첫 from: upsert용
+    supabaseBrowser.from.mockImplementationOnce(() => upsertChain); // 첫 from: upsert용
 
     const out = await savePokemonResult(etag, matchResult);
 
@@ -92,7 +92,7 @@ describe('savePokemonResult', () => {
     );
 
     // 재조회가 발생하지 않았음을 보장
-    expect(supabase.from).toHaveBeenCalledTimes(1);
+    expect(supabaseBrowser.from).toHaveBeenCalledTimes(1);
   });
 
   test('upsert가 데이터 없이 끝나면(충돌) 재조회 결과를 반환', async () => {
@@ -110,7 +110,7 @@ describe('savePokemonResult', () => {
       error: null,
     });
 
-    supabase.from
+    supabaseBrowser.from
       .mockImplementationOnce(() => upsertChain) // upsert: data가 null -> DO NOTHING -> 기존 데이터 유지(0.9)
       .mockImplementationOnce(() => fetchChain); // 재조회
 
@@ -146,7 +146,7 @@ describe('savePokemonResult', () => {
       error: null,
     });
 
-    supabase.from
+    supabaseBrowser.from
       .mockImplementationOnce(() => upsertChain) // 에러나는 upsert
       .mockImplementationOnce(() => fetchChain); // 재조회
 
@@ -177,7 +177,7 @@ describe('savePokemonResult', () => {
       error: new Error('fetch failed'),
     });
 
-    supabase.from
+    supabaseBrowser.from
       .mockImplementationOnce(() => upsertChain)
       .mockImplementationOnce(() => fetchChain);
 

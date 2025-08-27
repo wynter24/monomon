@@ -30,7 +30,7 @@ export default function ResultClient({ id }: ResultClientProps) {
 
   return (
     <section
-      className="flex flex-col items-center py-28 sm:py-20"
+      className="flex flex-col items-center py-28 sm:py-20 sm:pt-32"
       aria-label="result pokemon"
     >
       <div className="flex w-full max-w-md flex-col items-center gap-8">

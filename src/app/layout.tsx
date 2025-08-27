@@ -4,6 +4,7 @@ import { Toaster } from 'sonner';
 import QueryProvider from '@/lib/queryProvider';
 import Header from '@/components/common/Header';
 import Footer from '@/components/common/Footer';
+import { supabaseServer } from '@/lib/supabaseServer';
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://monomon.vercel.app/'),
@@ -23,16 +24,21 @@ export const metadata: Metadata = {
   },
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const supabase = await supabaseServer();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
   return (
     <html lang="en">
       <body className="min-h-screen bg-white text-black">
         <QueryProvider>
-          <Header />
+          <Header initialUser={user} />
           <main className="mx-auto w-full flex-1 px-4">{children}</main>
           <Footer />
           <Toaster position="top-center" richColors />

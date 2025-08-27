@@ -7,7 +7,7 @@ export default function LandingPage() {
   const router = useRouter();
   return (
     <section
-      className="flex min-h-screen items-center justify-center p-4"
+      className="flex min-h-screen items-center justify-center p-4 md:pt-24"
       aria-label="Monomon landing section"
     >
       <div className="flex min-h-screen max-w-md flex-col items-center justify-center gap-10">
