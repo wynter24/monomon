@@ -59,7 +59,7 @@ export type Database = {
         };
         Relationships: [];
       };
-      pokemon_results: {
+      user_results: {
         Row: {
           created_at: string | null;
           id: string;

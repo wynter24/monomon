@@ -4,7 +4,6 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 import type { Database } from '@/types/supabase';
 
 export async function savePokemonResult(
-  // imageUrl: string,
   etag: string,
   matchResult: MatchResult,
   supabaseClient?: SupabaseClient<Database>,

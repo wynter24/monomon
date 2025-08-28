@@ -1,5 +1,6 @@
-import { matchPokemon } from '@/api/matchPokemon';
-import { savePokemonResult } from '@/api/savePokemonResult';
+import { saveUserHistory } from '@/apis/history.client';
+import { matchPokemon } from '@/apis/matchPokemon';
+import { savePokemonResult } from '@/apis/savePokemonResult';
 import { useMutation } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
@@ -15,8 +16,15 @@ export const useUploadMutation = () => {
       uploadedImgUrl: string;
       etag: string;
     }) => {
-      const data = await matchPokemon(uploadedImgUrl); // 분석
-      const { id } = await savePokemonResult(etag, data); // 저장
+      const result = await matchPokemon(uploadedImgUrl); // 분석
+      const { id } = await savePokemonResult(etag, result); // 저장
+
+      void saveUserHistory(etag, result, uploadedImgUrl).catch((e) => {
+        if (process.env.NODE_ENV === 'development') {
+          console.error('saveUserHistory error:', e);
+        }
+      });
+
       return id;
     },
     onSuccess: (id) => {
