@@ -1,6 +1,6 @@
 import { saveUserHistory } from '@/apis/history.client';
 import { matchPokemon } from '@/apis/matchPokemon';
-import { savePokemonResult } from '@/apis/savePokemonResult';
+import { savePokemonResult } from '@/apis/imageResults.client';
 import { useMutation } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';

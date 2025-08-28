@@ -1,16 +1,11 @@
+import { getImageResultByShareId } from '@/apis/imageResults.server';
 import SharedResultClient from '@/components/result/SharedResultClient';
 
 type Params = Promise<{ id: string }>;
 
 export async function generateMetadata({ params }: { params: Params }) {
   const { id } = await params;
-
-  const res = await fetch(
-    `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/result/${id}`,
-    { cache: 'no-store' },
-  );
-  const result = res.ok ? await res.json().then((data) => data.result) : null;
-
+  const result = await getImageResultByShareId(id);
   if (!result) {
     return {
       title: 'No Result Available',
