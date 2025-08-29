@@ -1,5 +1,5 @@
 import { listUserHistorySSR } from '@/apis/history.sever';
-import HistoryClient from '@/components/user/HistoryClient';
+import HistoryClient from '@/components/history/HistoryClient';
 import { supabaseServer } from '@/lib/supabaseServer';
 
 type Params = Promise<{ id: string }>;
