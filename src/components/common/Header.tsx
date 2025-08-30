@@ -157,7 +157,8 @@ export default function Header({
                           </li>
                           <li role="none">
                             <Link
-                              href="/pokedex"
+                              href="https://pokemonkorea.co.kr/pokedex"
+                              target="_blank"
                               onClick={handlePokedex}
                               className="flex w-full items-center space-x-3 px-4 py-2 text-left text-sm text-gray-700 transition-colors hover:bg-gray-50"
                               role="menuitem"
