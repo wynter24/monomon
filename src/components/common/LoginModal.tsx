@@ -16,11 +16,12 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
   const handleOAuthLogin = async (provider: 'google') => {
     try {
       setIsLoading(true);
+      const next =
+        new URL(window.location.href).searchParams.get('next') ?? '/';
       const { error } = await supabaseBrowser.auth.signInWithOAuth({
         provider,
         options: {
-          redirectTo: `${window.location.origin}/auth/callback`,
-
+          redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(next)}`,
           queryParams: { access_type: 'offline', prompt: 'consent' },
         },
       });

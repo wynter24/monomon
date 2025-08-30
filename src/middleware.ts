@@ -1,74 +1,54 @@
-// import { createServerClient, type CookieOptions } from '@supabase/ssr';
+import { createServerClient, type CookieOptions } from '@supabase/ssr';
 import { type NextRequest, NextResponse } from 'next/server';
 
 export async function middleware(request: NextRequest) {
-  let response = NextResponse.next({
-    request: {
-      headers: request.headers,
+  let response = NextResponse.next();
+
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        getAll() {
+          // Next.js 미들웨어에서 request.cookies는 읽기 전용이므로 그대로 전달
+          return request.cookies
+            .getAll()
+            .map(({ name, value }) => ({ name, value }));
+        },
+        setAll(cookies) {
+          // Supabase가 세션 갱신 시 내려주는 쿠키들을 response에 세팅
+          cookies.forEach(
+            ({
+              name,
+              value,
+              options,
+            }: {
+              name: string;
+              value: string;
+              options: CookieOptions;
+            }) => {
+              response.cookies.set(name, value, options);
+            },
+          );
+        },
+      },
     },
-  });
+  );
 
-  // const supabase = createServerClient(
-  //   process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  //   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-  //   {
-  //     cookies: {
-  //       get(name: string) {
-  //         return request.cookies.get(name)?.value;
-  //       },
-  //       set(name: string, value: string, options: CookieOptions) {
-  //         request.cookies.set({
-  //           name,
-  //           value,
-  //           ...options,
-  //         });
-  //         response = NextResponse.next({
-  //           request: {
-  //             headers: request.headers,
-  //           },
-  //         });
-  //         response.cookies.set({
-  //           name,
-  //           value,
-  //           ...options,
-  //         });
-  //       },
-  //       remove(name: string, options: CookieOptions) {
-  //         request.cookies.set({
-  //           name,
-  //           value: '',
-  //           ...options,
-  //         });
-  //         response = NextResponse.next({
-  //           request: {
-  //             headers: request.headers,
-  //           },
-  //         });
-  //         response.cookies.set({
-  //           name,
-  //           value: '',
-  //           ...options,
-  //         });
-  //       },
-  //     },
-  //   },
-  // );
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
 
-  // TODO: 기능 추가 후 사용
-  // const {
-  //   data: { user },
-  // } = await supabase.auth.getUser();
+  const protectedPagePaths = ['/history'];
+  const isProtectedPage = protectedPagePaths.some((p) =>
+    request.nextUrl.pathname.startsWith(p),
+  );
 
-  // const protectedPagePaths = ['/history', '/pokedex']; // 페이지 경로
-  // const isProtectedPage = protectedPagePaths.some((p) =>
-  //   request.nextUrl.pathname.startsWith(p),
-  // );
-
-  // if (isProtectedPage && !user) {
-  //   const url = new URL('/login', request.url);
-  //   url.searchParams.set('next', request.nextUrl.pathname);
-  //   return NextResponse.redirect(url);
-  // }
+  if (isProtectedPage && !user) {
+    const url = new URL('/', request.url);
+    url.searchParams.set('next', request.nextUrl.pathname);
+    return NextResponse.redirect(url);
+  }
 
   return response;
 }
