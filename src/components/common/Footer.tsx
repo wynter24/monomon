@@ -52,6 +52,21 @@ export default function Footer() {
           </li>
         </ul>
 
+        <p className="text-xs text-black/70">
+          Pokémon data from{' '}
+          <a
+            href="https://pokeapi.co/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="underline hover:no-underline"
+            aria-label="Open PokéAPI website"
+          >
+            PokéAPI
+          </a>
+          . Text © Nintendo / Creatures Inc. / GAME FREAK. Fan-made,
+          non-commercial project.
+        </p>
+
         <p className="text-xs text-black">
           © {new Date().getFullYear()} Monomon. All rights reserved.
         </p>

@@ -1,5 +1,5 @@
 import type { MatchResult } from '@/types/pokemon';
-import { savePokemonResult } from './savePokemonResult';
+import { savePokemonResult } from './imageResults.client';
 
 // supabase 클라이언트 모듈을 통채로 mock
 jest.mock('@/lib/supabaseBrowser', () => {

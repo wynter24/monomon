@@ -4,13 +4,18 @@ import { useUploadMutation } from './useUploadMutation';
 import { toast } from 'sonner';
 
 const mockMatchPokemon = jest.fn();
-jest.mock('@/api/matchPokemon', () => ({
+jest.mock('@/apis/matchPokemon', () => ({
   matchPokemon: (...args: any[]) => mockMatchPokemon(...args),
 }));
 
 const mockSavePokemonResult = jest.fn();
-jest.mock('@/api/savePokemonResult', () => ({
+jest.mock('@/apis/imageResults.client', () => ({
   savePokemonResult: (...args: any[]) => mockSavePokemonResult(...args),
+}));
+
+const mockGetPokemonInfo = jest.fn();
+jest.mock('@/apis/getPokemonInfo', () => ({
+  getPokemonInfo: (...args: any[]) => mockGetPokemonInfo(...args),
 }));
 
 const mockPush = jest.fn();
@@ -33,10 +38,16 @@ describe('useUploadMutation', () => {
     // given
     const uploadedImgUrl = 'https://example.com/me.png';
     const etag = 'etag-123';
-    const analysis = { name: 'Pikachu', matched: 87 };
+    const analysis = {
+      matched_pokemon_id: 25,
+      matched_pokemon_name: 'Pikachu',
+      similarity_score: 87,
+    };
+    const pokemonInfo = { text: 'Electric mouse Pokémon', genus: 'Mouse' };
     const saved = { id: 'share-abc' };
 
     mockMatchPokemon.mockResolvedValueOnce(analysis);
+    mockGetPokemonInfo.mockResolvedValueOnce(pokemonInfo);
     mockSavePokemonResult.mockResolvedValueOnce(saved);
 
     const { result } = renderHook(() => useUploadMutation(), {
@@ -50,7 +61,14 @@ describe('useUploadMutation', () => {
 
     // then
     expect(mockMatchPokemon).toHaveBeenCalledWith(uploadedImgUrl);
-    expect(mockSavePokemonResult).toHaveBeenCalledWith(etag, analysis);
+    expect(mockGetPokemonInfo).toHaveBeenCalledWith(
+      analysis.matched_pokemon_id,
+    );
+    expect(mockSavePokemonResult).toHaveBeenCalledWith(etag, {
+      ...analysis,
+      matched_pokemon_description: pokemonInfo.text,
+      matched_pokemon_genus: pokemonInfo.genus,
+    });
 
     await waitFor(() => {
       expect(mockPush).toHaveBeenCalledWith(`/result/${saved.id}`);

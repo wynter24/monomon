@@ -1,16 +1,11 @@
 import { supabaseBrowser } from '@/lib/supabaseBrowser';
 import { MatchResult } from '@/types/pokemon';
-import type { SupabaseClient } from '@supabase/supabase-js';
-import type { Database } from '@/types/supabase';
 
 export async function savePokemonResult(
-  // imageUrl: string,
   etag: string,
   matchResult: MatchResult,
-  supabaseClient?: SupabaseClient<Database>,
 ) {
-  const supabase = supabaseClient || supabaseBrowser;
-  const { data, error } = await supabase
+  const { data, error } = await supabaseBrowser
     .from('image_results')
     .upsert(
       {
@@ -29,7 +24,7 @@ export async function savePokemonResult(
 
   // 충돌로 data가 비면 한 번 조회
   if (!data?.share_id) {
-    const { data: existing, error: fetchErr } = await supabase
+    const { data: existing, error: fetchErr } = await supabaseBrowser
       .from('image_results')
       .select('share_id, result')
       .eq('image_hash', etag)
@@ -49,4 +44,17 @@ export async function savePokemonResult(
   }
 
   return { result: matchResult, id: data.share_id };
+}
+
+export async function getImageResultClient(
+  shareId: string,
+): Promise<MatchResult | null> {
+  const { data, error } = await supabaseBrowser
+    .from('image_results')
+    .select('result')
+    .eq('share_id', shareId)
+    .maybeSingle();
+
+  if (error) throw error;
+  return (data?.result ?? null) as MatchResult | null;
 }

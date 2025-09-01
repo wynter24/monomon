@@ -4,7 +4,7 @@ import { NextResponse } from 'next/server';
 export async function GET(request: Request) {
   const url = new URL(request.url);
   const code = url.searchParams.get('code');
-  const next = url.searchParams.get('redirect') ?? '/';
+  const next = url.searchParams.get('next') ?? '/';
 
   if (!code) {
     console.error('Missing code. request.url =', request.url);
@@ -25,5 +25,6 @@ export async function GET(request: Request) {
     );
   }
 
-  return NextResponse.redirect(new URL(next, url.origin));
+  const safeNext = next.startsWith('/') ? next : '/';
+  return NextResponse.redirect(new URL(safeNext, url.origin));
 }

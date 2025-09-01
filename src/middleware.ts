@@ -2,76 +2,52 @@ import { createServerClient, type CookieOptions } from '@supabase/ssr';
 import { type NextRequest, NextResponse } from 'next/server';
 
 export async function middleware(request: NextRequest) {
-  let response = NextResponse.next({
-    request: {
-      headers: request.headers,
-    },
-  });
+  let response = NextResponse.next();
 
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
       cookies: {
-        get(name: string) {
-          return request.cookies.get(name)?.value;
+        getAll() {
+          // Next.js 미들웨어에서 request.cookies는 읽기 전용이므로 그대로 전달
+          return request.cookies
+            .getAll()
+            .map(({ name, value }) => ({ name, value }));
         },
-        set(name: string, value: string, options: CookieOptions) {
-          request.cookies.set({
-            name,
-            value,
-            ...options,
-          });
-          response = NextResponse.next({
-            request: {
-              headers: request.headers,
+        setAll(cookies) {
+          // Supabase가 세션 갱신 시 내려주는 쿠키들을 response에 세팅
+          cookies.forEach(
+            ({
+              name,
+              value,
+              options,
+            }: {
+              name: string;
+              value: string;
+              options: CookieOptions;
+            }) => {
+              response.cookies.set(name, value, options);
             },
-          });
-          response.cookies.set({
-            name,
-            value,
-            ...options,
-          });
-        },
-        remove(name: string, options: CookieOptions) {
-          request.cookies.set({
-            name,
-            value: '',
-            ...options,
-          });
-          response = NextResponse.next({
-            request: {
-              headers: request.headers,
-            },
-          });
-          response.cookies.set({
-            name,
-            value: '',
-            ...options,
-          });
+          );
         },
       },
     },
   );
 
-  // 세션 새로고침
   const {
     data: { user },
   } = await supabase.auth.getUser();
 
-  // 보호된 API 경로 확인
-  const protectedApiPaths = [
-    '/api/result',
-    '/api/savePokemonResult',
-    '/api/uploadImage',
-  ];
-  const isProtectedApi = protectedApiPaths.some((path) =>
-    request.nextUrl.pathname.startsWith(path),
+  const protectedPagePaths = ['/history'];
+  const isProtectedPage = protectedPagePaths.some((p) =>
+    request.nextUrl.pathname.startsWith(p),
   );
 
-  // API 보호
-  if (isProtectedApi && !user) {
-    return NextResponse.json({ error: '인증이 필요합니다' }, { status: 401 });
+  if (isProtectedPage && !user) {
+    const url = new URL('/', request.url);
+    url.searchParams.set('next', request.nextUrl.pathname);
+    return NextResponse.redirect(url);
   }
 
   return response;

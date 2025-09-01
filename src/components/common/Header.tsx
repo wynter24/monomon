@@ -42,17 +42,12 @@ export default function Header({
   useEffect(() => {
     const supabase = supabaseBrowser;
 
-    // 최신 세션 재확인(선택)
-    supabase.auth.getUser().then(({ data }) => {
-      if (data.user?.id !== user?.id) setUser(data.user ?? null);
-    });
-
     // 로그인/로그아웃/토큰갱신 반영
     const { data: sub } = supabase.auth.onAuthStateChange((_e, session) => {
       setUser(session?.user ?? null);
     });
     return () => sub.subscription.unsubscribe();
-  }, []); // eslint-disable-line
+  }, []);
 
   const userEmail = user?.email ?? 'User';
 
@@ -162,7 +157,8 @@ export default function Header({
                           </li>
                           <li role="none">
                             <Link
-                              href="/pokedex"
+                              href="https://pokemonkorea.co.kr/pokedex"
+                              target="_blank"
                               onClick={handlePokedex}
                               className="flex w-full items-center space-x-3 px-4 py-2 text-left text-sm text-gray-700 transition-colors hover:bg-gray-50"
                               role="menuitem"

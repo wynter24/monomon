@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
-import { uploadImage } from '@/api/uploadImage';
+import { uploadImage } from '@/apis/uploadImage';
 
 export type UploadResult = {
   publicId: string;
