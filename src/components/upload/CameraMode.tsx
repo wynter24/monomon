@@ -238,23 +238,18 @@ export default function CameraMode({ videoRef, onCapture, onCancel }: Props) {
       aria-label="Camera mode"
     >
       {/* Pokedex shell */}
-      <div className="relative aspect-[9/16] h-[70vh] w-full overflow-hidden rounded-2xl bg-red-600 shadow-[inset_0_0_0_3px_rgba(0,0,0,0.25)] sm:aspect-video">
-        {/* top indicator row */}
-        <div className="absolute inset-x-0 top-0 z-10 flex items-center justify-between px-4 py-3">
-          <div className="flex items-center gap-2">
-            <span className="inline-block h-4 w-4 rounded-full bg-blue-400 shadow-[inset_0_0_0_2px_rgba(255,255,255,0.6)]" />
-            <span className="inline-block h-2 w-2 rounded-full bg-yellow-300" />
-            <span className="inline-block h-2 w-2 rounded-full bg-green-300" />
-          </div>
-          <div className="h-1 w-24 rounded bg-red-700/60" />
+      <div className="relative w-full max-w-lg rounded-2xl bg-red-600 p-3 text-white shadow-xl ring-1 ring-red-700/40 sm:p-5">
+        {/* Pokedex top indicators */}
+        <div className="mb-2 flex items-center gap-2 sm:mb-4">
+          <div className="h-4 w-4 rounded-full bg-blue-400 ring-2 ring-blue-200 sm:h-6 sm:w-6" />
+          <div className="h-1.5 w-1.5 rounded-full bg-green-300 sm:h-2 sm:w-2" />
+          <div className="h-1.5 w-1.5 rounded-full bg-yellow-300 sm:h-2 sm:w-2" />
         </div>
 
-        {/* inner bezel */}
-        <div className="absolute inset-3 rounded-xl bg-red-700/40 p-3">
-          <div className="absolute inset-0 rounded-xl shadow-[inset_0_10px_30px_rgba(0,0,0,0.35),inset_0_-8px_24px_rgba(0,0,0,0.28)]" />
-
+        {/* Main screen */}
+        <div className="rounded-2xl bg-red-700/40 p-2 shadow-inner sm:p-4">
           {/* screen */}
-          <div className="relative h-full w-full rounded-md bg-black">
+          <div className="relative aspect-[3/4] w-full rounded-lg bg-black p-2 sm:aspect-[4/3] sm:p-3">
             <video
               ref={videoRef}
               autoPlay
@@ -262,7 +257,7 @@ export default function CameraMode({ videoRef, onCapture, onCancel }: Props) {
               muted
               aria-hidden="true"
               onLoadedData={() => setVideoReady(true)}
-              className={`h-full w-full rounded-[6px] object-cover ${mirror ? 'scale-x-[-1]' : ''}`}
+              className={`h-full w-full rounded-lg object-cover ${mirror ? 'scale-x-[-1]' : ''}`}
             />
             {isSwitching && (
               <div
@@ -276,55 +271,53 @@ export default function CameraMode({ videoRef, onCapture, onCancel }: Props) {
           </div>
         </div>
 
-        {/* bottom control dock */}
-        <div className="absolute inset-x-3 bottom-3 z-10">
-          <div className="rounded-xl bg-red-700/60 p-2 shadow-[inset_0_0_0_2px_rgba(0,0,0,0.15)]">
-            <div className="grid grid-cols-4 items-center gap-2 rounded-lg bg-neutral-900/90 p-2">
-              {/* Capture (primary big) */}
-              <button
-                onClick={capture}
-                disabled={!videoReady}
-                className={twMerge(
-                  'col-span-2 flex items-center justify-center rounded-full bg-yellow-400 py-3 text-neutral-900 transition hover:bg-yellow-300 disabled:opacity-50',
-                  isMobile && isFrontCamera && 'col-span-1',
-                )}
-                aria-label="Capture photo"
-              >
-                <Camera size={22} />
-              </button>
-
-              {/* Switch camera */}
-              <button
-                onClick={switchCamera}
-                disabled={isSwitching || devices.length < 2}
-                className="flex items-center justify-center rounded-md bg-neutral-700 p-3 text-white transition hover:bg-neutral-600 disabled:opacity-50 sm:hidden"
-                aria-label="Switch camera"
-              >
-                <RefreshCw
-                  size={18}
-                  className={isSwitching ? 'animate-spin' : ''}
-                />
-              </button>
-
-              {/* Mirror toggle: desktop(always) or mobile(front-only) */}
-              {(!isMobile || isFrontCamera) && (
-                <button
-                  onClick={() => setMirror((prev) => !prev)}
-                  className="flex items-center justify-center rounded-md bg-neutral-700 p-3 text-white transition hover:bg-neutral-600"
-                  aria-label="Toggle mirror mode"
-                >
-                  <FlipHorizontal size={18} />
-                </button>
+        {/* Controls row */}
+        <div className="mt-2 flex items-center justify-center sm:mt-4">
+          <div className="grid w-full grid-cols-4 items-center gap-1.5 rounded-lg bg-black p-1.5 sm:gap-2 sm:p-2">
+            {/* Capture (primary big) */}
+            <button
+              onClick={capture}
+              disabled={!videoReady}
+              className={twMerge(
+                'col-span-2 flex h-10 items-center justify-center rounded-full bg-yellow-400 text-neutral-900 transition hover:bg-yellow-300 disabled:opacity-50 sm:h-12',
+                isMobile && isFrontCamera && 'col-span-1',
               )}
+              aria-label="Capture photo"
+            >
+              <Camera size={18} className="sm:h-5 sm:w-5" />
+            </button>
 
+            {/* Switch camera */}
+            <button
+              onClick={switchCamera}
+              disabled={isSwitching || devices.length < 2}
+              className="flex h-10 items-center justify-center rounded-md bg-neutral-700 text-white transition hover:bg-neutral-600 disabled:opacity-50 sm:hidden sm:h-12"
+              aria-label="Switch camera"
+            >
+              <RefreshCw
+                size={16}
+                className={`sm:h-4 sm:w-4 ${isSwitching ? 'animate-spin' : ''}`}
+              />
+            </button>
+
+            {/* Mirror toggle: desktop(always) or mobile(front-only) */}
+            {(!isMobile || isFrontCamera) && (
               <button
-                onClick={handleCancel}
-                className="flex items-center justify-center rounded-md bg-neutral-700 p-3 text-white transition hover:bg-neutral-600"
-                aria-label="Cancel capture"
+                onClick={() => setMirror((prev) => !prev)}
+                className="flex h-10 items-center justify-center rounded-md bg-neutral-700 text-white transition hover:bg-neutral-600 sm:h-12"
+                aria-label="Toggle mirror mode"
               >
-                <X size={20} />
+                <FlipHorizontal size={16} className="sm:h-4 sm:w-4" />
               </button>
-            </div>
+            )}
+
+            <button
+              onClick={handleCancel}
+              className="flex h-10 items-center justify-center rounded-md bg-neutral-700 text-white transition hover:bg-neutral-600 sm:h-12"
+              aria-label="Cancel capture"
+            >
+              <X size={18} className="sm:h-5 sm:w-5" />
+            </button>
           </div>
         </div>
       </div>
