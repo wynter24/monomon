@@ -97,7 +97,7 @@ export default function Header({
             {/* 로그인/사용자 메뉴 */}
             <div className="flex items-center">
               {user ? (
-                <div className="relative sm:flex">
+                <div className="relative flex">
                   <div className="mr-4 flex items-center space-x-4">
                     <Link
                       href="/upload"
