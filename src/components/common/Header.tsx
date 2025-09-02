@@ -98,7 +98,7 @@ export default function Header({
             <div className="flex items-center">
               {user ? (
                 <div className="relative sm:flex">
-                  <div className="mr-4 hidden items-center space-x-4 sm:flex">
+                  <div className="mr-4 flex items-center space-x-4">
                     <Link
                       href="/upload"
                       className="flex items-center space-x-2 text-sm text-gray-700 transition-colors hover:text-gray-900 sm:text-base"
