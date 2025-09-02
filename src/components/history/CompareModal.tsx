@@ -31,7 +31,7 @@ export default function CompareModal({
               Close
             </button>
           </div>
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <div className="grid grid-cols-2 gap-4">
             <div className="rounded-lg bg-gray-100 p-3">
               <div className="mb-2 text-center text-sm font-medium">
                 Matched
