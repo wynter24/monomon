@@ -37,7 +37,8 @@ export const useUploadMutation = () => {
     onSuccess: (id) => {
       router.push(`/result/${id}`);
     },
-    onError: () => {
+    onError: (e) => {
+      console.log(e);
       toast.error('Failed to find a match. Please try again.');
     },
   });

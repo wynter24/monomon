@@ -5,25 +5,23 @@ export async function savePokemonResult(
   etag: string,
   matchResult: MatchResult,
 ) {
-  const { data, error } = await supabaseBrowser
-    .from('image_results')
-    .upsert(
-      {
-        image_hash: etag,
-        result: matchResult,
-        matched_id: matchResult.matched_pokemon_id,
-      },
-      { onConflict: 'image_hash', ignoreDuplicates: true }, // == INSERT ... ON CONFLICT DO NOTHING
-    )
-    .select('share_id')
-    .maybeSingle();
-
+  const { error } = await supabaseBrowser.from('image_results').upsert(
+    {
+      image_hash: etag,
+      result: matchResult,
+      matched_id: matchResult.matched_pokemon_id,
+    },
+    {
+      onConflict: 'image_hash',
+      ignoreDuplicates: true,
+    },
+  );
   if (error && process.env.NODE_ENV === 'development') {
     console.error('image_results upsert failed:', error.message ?? error);
   }
 
-  // 충돌로 data가 비면 한 번 조회
-  if (!data?.share_id) {
+  // 본문을 받지 않으므로 항상 조회하여 share_id/결과 조회
+  {
     const { data: existing, error: fetchErr } = await supabaseBrowser
       .from('image_results')
       .select('share_id, result')
@@ -42,8 +40,6 @@ export async function savePokemonResult(
       id: existing?.share_id ?? null,
     };
   }
-
-  return { result: matchResult, id: data.share_id };
 }
 
 export async function getImageResultClient(
