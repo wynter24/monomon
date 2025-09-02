@@ -5,6 +5,7 @@ import QueryProvider from '@/lib/queryProvider';
 import Header from '@/components/common/Header';
 import Footer from '@/components/common/Footer';
 import { supabaseServer } from '@/lib/supabaseServer';
+import InAppRedirect from '@/components/common/InAppRedirect';
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://monomon.vercel.app/'),
@@ -38,6 +39,7 @@ export default async function RootLayout({
     <html lang="en">
       <body className="min-h-screen bg-white text-black">
         <QueryProvider>
+          <InAppRedirect /> {/* TODO: 로그인 버튼 시점에만 적용되도록 수정 */}
           <Header initialUser={user} />
           <main className="mx-auto w-full flex-1 px-4">{children}</main>
           <Footer />
