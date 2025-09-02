@@ -52,7 +52,7 @@ export default function HistoryClient({ initialList }: HistoryClientProps) {
 
   return (
     <section
-      className="mx-auto flex w-full max-w-4xl gap-6 px-4 pt-28 pb-12"
+      className="mx-auto flex w-full max-w-4xl flex-col gap-6 px-4 pt-28 pb-12 md:flex-row"
       aria-label="history pokedex layout"
     >
       <HistroyMainPanel selected={selected} setShowCompare={setShowCompare} />
