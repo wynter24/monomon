@@ -13,15 +13,13 @@ jest.mock('@/lib/supabaseBrowser', () => {
 // 공통 타입
 type MaybeSingleResult<T> = { data: T | null; error: any | null };
 type MaybeSingleFn<T> = () => Promise<MaybeSingleResult<T>>;
+type UpsertResult = { error: any | null };
+type UpsertFn = () => Promise<UpsertResult>;
 
-function makeUpsertChain<T>(resolved: MaybeSingleResult<T>) {
-  // 변수 타입 주석으로 지정
-  const maybeSingle: jest.MockedFunction<MaybeSingleFn<T>> = jest.fn();
-  maybeSingle.mockResolvedValue(resolved);
-
-  const select = jest.fn().mockReturnValue({ maybeSingle });
-  const upsert = jest.fn().mockReturnValue({ select });
-  return { upsert, __leafs: { select, maybeSingle } };
+function makeUpsertChain(resolved: UpsertResult) {
+  const upsert: jest.MockedFunction<UpsertFn> = jest.fn();
+  upsert.mockResolvedValue(resolved);
+  return { upsert };
 }
 
 function makeFetchChain<T>(resolved: MaybeSingleResult<T>) {
@@ -46,15 +44,17 @@ describe('savePokemonResult', () => {
 
   const originalNodeEnv = process.env.NODE_ENV;
 
-  const mkMatchResult = (
-    overrides: Partial<MatchResult> = {},
-  ): MatchResult => ({
-    matched_pokemon_id: 25,
-    matched_pokemon_name: 'Pikachu',
-    matched_pokemon_image: 'https://example.com/pikachu.png',
-    similarity_score: 0.87,
-    ...overrides,
-  });
+  const mkMatchResult = (overrides: Partial<MatchResult> = {}): MatchResult => {
+    return {
+      matched_pokemon_id: overrides.matched_pokemon_id ?? 25,
+      matched_pokemon_name: overrides.matched_pokemon_name ?? 'Pikachu',
+      matched_pokemon_image:
+        overrides.matched_pokemon_image ?? 'https://example.com/pikachu.png',
+      similarity_score: overrides.similarity_score ?? 0.87,
+      matched_pokemon_description: overrides.matched_pokemon_description ?? '',
+      matched_pokemon_genus: overrides.matched_pokemon_genus ?? '',
+    };
+  };
 
   const etag = 'etag-123';
   const matchResult: MatchResult = mkMatchResult();
@@ -68,13 +68,19 @@ describe('savePokemonResult', () => {
     setNodeEnv(originalNodeEnv); // 원복 (undefined면 삭제)
   });
 
-  test('정상 upsert가 share_id를 반환하면 그대로 반환', async () => {
-    const upsertChain = makeUpsertChain<{ share_id: string }>({
-      data: { share_id: 'share-abc' },
+  test('정상 upsert 후 재조회 결과를 반환', async () => {
+    const upsertChain = makeUpsertChain({ error: null });
+    const fetchChain = makeFetchChain<{
+      share_id: string;
+      result: MatchResult;
+    }>({
+      data: { share_id: 'share-abc', result: matchResult },
       error: null,
     });
 
-    supabaseBrowser.from.mockImplementationOnce(() => upsertChain); // 첫 from: upsert용
+    supabaseBrowser.from
+      .mockImplementationOnce(() => upsertChain) // upsert
+      .mockImplementationOnce(() => fetchChain); // fetch
 
     const out = await savePokemonResult(etag, matchResult);
 
@@ -91,15 +97,12 @@ describe('savePokemonResult', () => {
       { onConflict: 'image_hash', ignoreDuplicates: true },
     );
 
-    // 재조회가 발생하지 않았음을 보장
-    expect(supabaseBrowser.from).toHaveBeenCalledTimes(1);
+    // 재조회가 image_hash 기준으로 수행되었는지
+    expect(fetchChain.__leafs.eq).toHaveBeenCalledWith('image_hash', etag);
   });
 
   test('upsert가 데이터 없이 끝나면(충돌) 재조회 결과를 반환', async () => {
-    const upsertChain = makeUpsertChain<{ share_id: string }>({
-      data: null,
-      error: null,
-    }); // 충돌로 인한 데이터 없음
+    const upsertChain = makeUpsertChain({ error: null });
     // 기존에 존재하는 데이터 설정
     const existing = {
       share_id: 'share-exist',
@@ -133,10 +136,7 @@ describe('savePokemonResult', () => {
       .spyOn(console, 'error')
       .mockImplementation(() => {});
 
-    const upsertChain = makeUpsertChain<{ share_id: string }>({
-      data: null,
-      error: new Error('upsert failed'),
-    });
+    const upsertChain = makeUpsertChain({ error: new Error('upsert failed') });
     const existing = {
       share_id: 'share-after-error',
       result: matchResult,
@@ -168,10 +168,7 @@ describe('savePokemonResult', () => {
       .spyOn(console, 'error')
       .mockImplementation(() => {});
 
-    const upsertChain = makeUpsertChain<{ share_id: string }>({
-      data: null,
-      error: null,
-    });
+    const upsertChain = makeUpsertChain({ error: null });
     const fetchChain = makeFetchChain<{ share_id: string; result: any }>({
       data: null,
       error: new Error('fetch failed'),
