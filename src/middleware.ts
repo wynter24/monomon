@@ -2,7 +2,13 @@ import { createServerClient, type CookieOptions } from '@supabase/ssr';
 import { type NextRequest, NextResponse } from 'next/server';
 
 export async function middleware(request: NextRequest) {
-  let response = NextResponse.next();
+  const requestHeaders = new Headers(request.headers);
+  const requestId = crypto.randomUUID();
+  requestHeaders.set('x-request-id', requestId);
+
+  // 클라 디버그용
+  let response = NextResponse.next({ request: { headers: requestHeaders } });
+  response.headers.set('x-request-id', requestId); // 로그/추적용 ID
 
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -35,9 +41,15 @@ export async function middleware(request: NextRequest) {
     },
   );
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const hasSession =
+    request.cookies.has('sb-access-token') ||
+    request.cookies.has('sb-refresh-token');
+
+  let user = null;
+  if (hasSession) {
+    const { data } = await supabase.auth.getUser();
+    user = data.user;
+  }
 
   const protectedPagePaths = ['/history'];
   const isProtectedPage = protectedPagePaths.some((p) =>
