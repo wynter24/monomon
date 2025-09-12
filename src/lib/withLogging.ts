@@ -5,28 +5,30 @@ export function withLogging<
 >(handler: H) {
   return async (req: Request, ...args: any[]) => {
     const started = performance.now();
+    const u = new URL(req.url);
+    const bid = req.headers.get('x-batch-id') ?? undefined;
     try {
       const res = await handler(req, ...args);
-      const duration = Math.round(performance.now() - started);
-      const bid = req.headers.get('x-batch-id') ?? undefined;
       logger.info({
         msg: 'api_done',
         method: req.method,
-        path: new URL(req.url).pathname,
+        path: u.pathname,
+        url: u.toString(),
+        search: u.search || null,
         status: res.status,
-        duration_ms: duration,
+        duration_ms: Math.round(performance.now() - started),
         request_id: res.headers.get('x-request-id') ?? undefined,
         batch_id: bid,
       });
       return res;
     } catch (err: any) {
-      const duration = Math.round(performance.now() - started);
-      const bid = req.headers.get('x-batch-id') ?? undefined;
       logger.error({
         msg: 'api_error',
         method: req.method,
-        path: new URL(req.url).pathname,
-        duration_ms: duration,
+        path: u.pathname,
+        url: u.toString(),
+        search: u.search || null,
+        duration_ms: Math.round(performance.now() - started),
         error: err?.message,
         batch_id: bid,
       });
