@@ -1,6 +1,6 @@
 // 사용법:
-//   npx tsx scripts/pino-metrics-lite.ts ./pino-prod.log "/api/match"
-//   npx tsx scripts/pino-metrics-lite.ts ./pino-prod.log all
+//   npx tsx scripts/pino-metrics.ts ./pino-prod.log "/api/match"
+//   npx tsx scripts/pino-metrics.ts ./pino-prod.log all
 import * as fs from 'fs';
 
 const file = process.argv[2] || './pino.log';
