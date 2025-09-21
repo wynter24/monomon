@@ -1,8 +1,5 @@
-//   npx tsx scripts/pino-metrics-bom.ts <logfile> [/api/match|all|list] [BATCH_ID]
-//   e.g.
-//   npx tsx scripts/pino-metrics-bom.ts ./pino-prod.log /api/match 9a3c...-...-...
-//   npx tsx scripts/pino-metrics-bom.ts ./pino-prod.log all
-//   npx tsx scripts/pino-metrics-bom.ts ./pino-prod.log list
+// 정확히 N개의 요청만 계산하는 pino 메트릭 스크립트
+// 사용법: npx tsx scripts/pino-metrics-bom.ts ./pino-prod.log "/api/match" BATCH_ID 100
 
 import * as fs from 'fs';
 
@@ -12,8 +9,8 @@ type Any = Record<string, any>;
 const file = process.argv[2] || './pino.log';
 const targetArgRaw = process.argv[3] || '/api/match';
 const batchIdArg = (process.argv[4] || '').trim();
+const maxCount = parseInt(process.argv[5] || '100', 10);
 const targetArg = targetArgRaw.toLowerCase();
-const MODE_LIST = targetArg === 'list';
 const MODE_ALL = targetArg === 'all';
 
 // ===== Helpers =====
@@ -50,8 +47,11 @@ function parseLine(line: string): Any | null {
       if (inner) break;
     }
   }
-  // Some providers may wrap structured fields differently
-  return { ...outer, ...(inner || {}) };
+  return {
+    ...outer,
+    ...(inner || {}),
+    _timestamp: outer.timestampInMs || outer.time || Date.now(),
+  };
 }
 
 function extractPath(rec: Any): string | undefined {
@@ -104,7 +104,6 @@ const extractDuration = (rec: Any): number | undefined => {
   return typeof d === 'number' ? d : undefined;
 };
 
-// Batch ID is recorded either as explicit field or via headers
 function extractBatchId(rec: Any): string | undefined {
   if (typeof rec.batch_id === 'string' && rec.batch_id) return rec.batch_id;
 
@@ -115,7 +114,6 @@ function extractBatchId(rec: Any): string | undefined {
     rec.meta?.headers;
 
   if (headers && typeof headers === 'object') {
-    // case-insensitive lookup
     for (const k of Object.keys(headers)) {
       if (k.toLowerCase() === 'x-batch-id') {
         const v = headers[k];
@@ -123,7 +121,6 @@ function extractBatchId(rec: Any): string | undefined {
       }
     }
   }
-
   return undefined;
 }
 
@@ -134,71 +131,89 @@ const lines = raw
   .map((l) => stripBOM(l.trim()))
   .filter(Boolean);
 
-// ===== list mode: show top 20 paths =====
-if (MODE_LIST) {
-  const counts = new Map<string, number>();
-  for (const line of lines) {
-    const rec = parseLine(line);
-    if (!rec) continue;
-    const p = normalizePath(extractPath(rec)) || '(no-path)';
-    counts.set(p, (counts.get(p) || 0) + 1);
-  }
-  const top = [...counts.entries()].sort((a, b) => b[1] - a[1]).slice(0, 20);
-  console.log('Top paths:');
-  for (const [p, c] of top) console.log(String(c).padStart(6), p);
-  process.exit(0);
-}
+console.log(`전체 로그 라인: ${lines.length}개`);
+console.log(`배치 ID: ${batchIdArg}`);
+console.log(`최대 개수: ${maxCount}개`);
 
-// ===== Aggregate =====
-let total = 0;
-let errors = 0;
-const durations: number[] = [];
+// ===== 매칭되는 레코드들을 먼저 수집 =====
+const matchedRecords: Array<{
+  rec: Any;
+  timestamp: number;
+  msg?: string;
+  status?: number;
+  duration?: number;
+}> = [];
 
 for (const line of lines) {
   const rec = parseLine(line);
   if (!rec) continue;
 
-  // Batch filter (exact match)
+  // Batch filter (필수)
   if (batchIdArg) {
     const bid = extractBatchId(rec);
     if (bid !== batchIdArg) continue;
   }
 
-  // Path filter (unless "all")
+  // Path filter
   const p = normalizePath(extractPath(rec));
   if (!MODE_ALL) {
-    if (!p) continue;
-    if (p !== normalizePath(targetArg)) continue;
+    if (!p || p !== normalizePath(targetArg)) continue;
   }
 
   const msg = extractMsg(rec);
   const status = extractStatus(rec);
-  const dur = extractDuration(rec);
+  const duration = extractDuration(rec);
 
-  // Primary: rely on msg tags if present
-  if (msg && DONE.has(msg)) {
-    total++;
-    if (typeof status === 'number' && status >= 500) errors++;
-    if (typeof dur === 'number') durations.push(dur);
-    continue;
-  }
-  if (msg && ERR.has(msg)) {
-    total++;
-    errors++;
-    if (typeof dur === 'number') durations.push(dur);
-    continue;
-  }
+  // api_done/api_error 메시지가 있거나, status/duration이 있는 완료된 요청만
+  const isCompleted =
+    (msg && (DONE.has(msg) || ERR.has(msg))) ||
+    typeof status === 'number' ||
+    typeof duration === 'number';
 
-  // Fallback: if format changed, still count meaningful records
-  // - If we have a status or duration, treat as a completed record.
-  if (typeof status === 'number' || typeof dur === 'number') {
-    total++;
-    if (typeof status === 'number' && status >= 500) errors++;
-    if (typeof dur === 'number') durations.push(dur);
+  if (isCompleted) {
+    matchedRecords.push({
+      rec,
+      timestamp: rec._timestamp,
+      msg,
+      status,
+      duration,
+    });
   }
 }
 
-// ===== Percentiles =====
+console.log(`매칭된 레코드: ${matchedRecords.length}개`);
+
+// ===== 타임스탬프 기준으로 정렬 (가장 최근 것부터) =====
+matchedRecords.sort((a, b) => b.timestamp - a.timestamp);
+
+// ===== 정확히 maxCount개만 선택 =====
+const selectedRecords = matchedRecords.slice(0, maxCount);
+console.log(`선택된 레코드: ${selectedRecords.length}개`);
+
+if (selectedRecords.length < maxCount) {
+  console.log(
+    `⚠️  요청된 ${maxCount}개보다 적은 ${selectedRecords.length}개만 발견됨`,
+  );
+}
+
+// ===== 메트릭 계산 =====
+let total = selectedRecords.length;
+let errors = 0;
+const durations: number[] = [];
+
+for (const { msg, status, duration } of selectedRecords) {
+  // 에러 판정
+  if ((msg && ERR.has(msg)) || (typeof status === 'number' && status >= 500)) {
+    errors++;
+  }
+
+  // duration 수집
+  if (typeof duration === 'number' && duration > 0) {
+    durations.push(duration);
+  }
+}
+
+// ===== 퍼센타일 계산 =====
 durations.sort((a, b) => a - b);
 const pct = (q: number) => {
   if (!durations.length) return null;
@@ -206,15 +221,41 @@ const pct = (q: number) => {
   return durations[Math.max(0, Math.min(idx, durations.length - 1))]!;
 };
 
-// ===== Output =====
+// ===== 출력 =====
+console.log('\n=== 정확한 메트릭 결과 ===');
 console.log('--- Metrics for', MODE_ALL ? 'ALL PATHS' : targetArg, '---');
-if (batchIdArg) console.log('batch_id:', batchIdArg);
-console.log('total:', total);
+console.log('batch_id:', batchIdArg);
+console.log('requested_count:', maxCount);
+console.log('actual_count:', total);
 console.log('errors:', errors);
 console.log(
   'error_rate_pct:',
   total ? ((100 * errors) / total).toFixed(2) : '0.00',
 );
+console.log('durations_collected:', durations.length);
 console.log('p50_ms:', pct(0.5) ?? '-');
 console.log('p95_ms:', pct(0.95) ?? '-');
 console.log('p99_ms:', pct(0.99) ?? '-');
+
+if (durations.length > 0) {
+  console.log('min_ms:', Math.min(...durations));
+  console.log('max_ms:', Math.max(...durations));
+  console.log(
+    'avg_ms:',
+    (durations.reduce((a, b) => a + b, 0) / durations.length).toFixed(2),
+  );
+}
+
+// ===== 디버깅 정보 =====
+if (selectedRecords.length > 0) {
+  const first = selectedRecords[selectedRecords.length - 1]; // 가장 오래된 것 (첫 번째)
+  const last = selectedRecords[0]; // 가장 최신 것 (마지막)
+
+  console.log('\n=== 시간 범위 ===');
+  console.log('첫 번째 요청:', new Date(first.timestamp).toISOString());
+  console.log('마지막 요청:', new Date(last.timestamp).toISOString());
+  console.log(
+    '총 소요 시간:',
+    ((last.timestamp - first.timestamp) / 1000).toFixed(1) + '초',
+  );
+}
