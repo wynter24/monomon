@@ -1,9 +1,17 @@
-// 정확히 N개의 요청만 계산하는 pino 메트릭 스크립트
 // 사용법: npx tsx scripts/pino-metrics-bom.ts ./pino-prod.log "/api/match" BATCH_ID 100
+// 출력: 라벨 있는 다줄 텍스트
+// 옵션: VERBOSE=1(디버그), PRINT_HEADER=0(헤더 비활성)
 
 import * as fs from 'fs';
 
 type Any = Record<string, any>;
+
+// ===== DQ rules (필요시 조정) =====
+const DQ_KEYWORDS = ['dq', 'validation', 'schema'];
+const DQ_STATUS = new Set([400, 422]);
+
+// ===== Env flags =====
+const VERBOSE = process.env.VERBOSE === '1';
 
 // ===== CLI Args =====
 const file = process.argv[2] || './pino.log';
@@ -15,7 +23,6 @@ const MODE_ALL = targetArg === 'all';
 
 // ===== Helpers =====
 const stripBOM = (s: string) => s.replace(/^\uFEFF/, '');
-
 const normalizePath = (p?: string) =>
   (p || '')
     .replace(/\/{2,}/g, '/')
@@ -25,7 +32,6 @@ const normalizePath = (p?: string) =>
 const DONE = new Set(['api_done', 'match_done']);
 const ERR = new Set(['api_error', 'match_error']);
 
-// JSON safe parse
 const safeParse = (s?: string | null): Any | null => {
   if (!s) return null;
   try {
@@ -35,23 +41,31 @@ const safeParse = (s?: string | null): Any | null => {
   }
 };
 
-// Parse one log line: outer JSON (Vercel) + inner pino JSON inside message/text/data/log
 function parseLine(line: string): Any | null {
   const outer = safeParse(line);
   if (!outer) return null;
-
   let inner: Any | null = null;
-  for (const k of ['message', 'text', 'data', 'log']) {
+  for (const k of [
+    'message',
+    'text',
+    'data',
+    'log',
+    'body',
+    'payload',
+    'content',
+  ]) {
     if (typeof outer[k] === 'string') {
       inner = safeParse(outer[k]);
       if (inner) break;
     }
   }
-  return {
-    ...outer,
-    ...(inner || {}),
-    _timestamp: outer.timestampInMs || outer.time || Date.now(),
-  };
+  let ts = outer.timestampInMs || outer.timestamp || outer.time || outer.ts;
+  if (typeof ts === 'string') {
+    const t = new Date(ts).getTime();
+    ts = isNaN(t) ? Date.now() : t;
+  }
+  if (typeof ts !== 'number') ts = Date.now();
+  return { ...outer, ...(inner || {}), _timestamp: ts };
 }
 
 function extractPath(rec: Any): string | undefined {
@@ -60,7 +74,6 @@ function extractPath(rec: Any): string | undefined {
   if (typeof rec.pathname === 'string') return rec.pathname;
   if (typeof rec.requestPath === 'string') return rec.requestPath;
   if (typeof rec.eventPath === 'string') return rec.eventPath;
-
   const urlLike =
     rec.url ||
     rec.req?.url ||
@@ -73,17 +86,17 @@ function extractPath(rec: Any): string | undefined {
         ? new URL(urlLike)
         : new URL(urlLike, 'http://x');
       return u.pathname;
-    } catch {
-      /* ignore */
-    }
+    } catch {}
   }
   return undefined;
 }
-
-const extractMsg = (rec: Any): string | undefined =>
+const extractMsg = (rec: Any) =>
   typeof rec.msg === 'string' ? rec.msg : undefined;
-
-const extractStatus = (rec: Any): number | undefined => {
+const extractEvent = (rec: Any) =>
+  typeof rec.event === 'string' ? rec.event : undefined;
+const extractErrorType = (rec: Any) =>
+  typeof rec.error_type === 'string' ? rec.error_type : undefined;
+const extractStatus = (rec: Any) => {
   const s =
     rec.status ??
     rec.statusCode ??
@@ -93,8 +106,7 @@ const extractStatus = (rec: Any): number | undefined => {
     rec.res?.statusCode;
   return typeof s === 'number' ? s : undefined;
 };
-
-const extractDuration = (rec: Any): number | undefined => {
+const extractDuration = (rec: Any) => {
   const d =
     rec.duration_ms ??
     rec.latency_ms ??
@@ -103,159 +115,173 @@ const extractDuration = (rec: Any): number | undefined => {
     rec.res?.responseTime;
   return typeof d === 'number' ? d : undefined;
 };
-
 function extractBatchId(rec: Any): string | undefined {
   if (typeof rec.batch_id === 'string' && rec.batch_id) return rec.batch_id;
-
   const headers =
     rec.headers ||
     rec.req?.headers ||
     rec.request?.headers ||
-    rec.meta?.headers;
-
+    rec.meta?.headers ||
+    rec.http?.headers ||
+    rec.context?.headers;
   if (headers && typeof headers === 'object') {
     for (const k of Object.keys(headers)) {
       if (k.toLowerCase() === 'x-batch-id') {
-        const v = headers[k];
+        const v = (headers as Any)[k];
         if (typeof v === 'string' && v) return v;
       }
     }
   }
   return undefined;
 }
+const dateStr = (ms: number) => {
+  const d = new Date(ms);
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+};
 
-// ===== Read file (BOM-safe) =====
-const raw = stripBOM(fs.readFileSync(file, 'utf8'));
+// ===== Read file =====
+const normalizedFile =
+  file.startsWith('/') || /^[A-Za-z]:/.test(file)
+    ? file
+    : require('path').resolve(process.cwd(), file);
+if (!fs.existsSync(normalizedFile)) {
+  console.error(`❌ 파일 없음: ${normalizedFile}`);
+  process.exit(1);
+}
+const raw = stripBOM(fs.readFileSync(normalizedFile, 'utf8'));
 const lines = raw
   .split(/\r?\n/)
   .map((l) => stripBOM(l.trim()))
   .filter(Boolean);
 
-console.log(`전체 로그 라인: ${lines.length}개`);
-console.log(`배치 ID: ${batchIdArg}`);
-console.log(`최대 개수: ${maxCount}개`);
-
-// ===== 매칭되는 레코드들을 먼저 수집 =====
-const matchedRecords: Array<{
-  rec: Any;
+// ===== Collect =====
+type RecWrap = {
   timestamp: number;
+  path?: string;
   msg?: string;
+  event?: string;
+  error_type?: string;
   status?: number;
   duration?: number;
-}> = [];
-
+};
+const records: RecWrap[] = [];
 for (const line of lines) {
   const rec = parseLine(line);
   if (!rec) continue;
-
-  // Batch filter (필수)
   if (batchIdArg) {
     const bid = extractBatchId(rec);
     if (bid !== batchIdArg) continue;
   }
-
-  // Path filter
   const p = normalizePath(extractPath(rec));
   if (!MODE_ALL) {
     if (!p || p !== normalizePath(targetArg)) continue;
   }
-
   const msg = extractMsg(rec);
   const status = extractStatus(rec);
   const duration = extractDuration(rec);
-
-  // api_done/api_error 메시지가 있거나, status/duration이 있는 완료된 요청만
+  const event = extractEvent(rec);
+  const error_type = extractErrorType(rec);
   const isCompleted =
     (msg && (DONE.has(msg) || ERR.has(msg))) ||
     typeof status === 'number' ||
     typeof duration === 'number';
-
-  if (isCompleted) {
-    matchedRecords.push({
-      rec,
+  if (isCompleted)
+    records.push({
       timestamp: rec._timestamp,
+      path: p,
       msg,
+      event,
+      error_type,
       status,
       duration,
     });
-  }
 }
+// 최신순 → N개
+records.sort((a, b) => b.timestamp - a.timestamp);
+const selected = records.slice(0, maxCount);
 
-console.log(`매칭된 레코드: ${matchedRecords.length}개`);
-
-// ===== 타임스탬프 기준으로 정렬 (가장 최근 것부터) =====
-matchedRecords.sort((a, b) => b.timestamp - a.timestamp);
-
-// ===== 정확히 maxCount개만 선택 =====
-const selectedRecords = matchedRecords.slice(0, maxCount);
-console.log(`선택된 레코드: ${selectedRecords.length}개`);
-
-if (selectedRecords.length < maxCount) {
-  console.log(
-    `⚠️  요청된 ${maxCount}개보다 적은 ${selectedRecords.length}개만 발견됨`,
-  );
-}
-
-// ===== 메트릭 계산 =====
-let total = selectedRecords.length;
-let errors = 0;
-const durations: number[] = [];
-
-for (const { msg, status, duration } of selectedRecords) {
-  // 에러 판정
-  if ((msg && ERR.has(msg)) || (typeof status === 'number' && status >= 500)) {
-    errors++;
-  }
-
-  // duration 수집
-  if (typeof duration === 'number' && duration > 0) {
-    durations.push(duration);
-  }
-}
-
-// ===== 퍼센타일 계산 =====
-durations.sort((a, b) => a - b);
-const pct = (q: number) => {
-  if (!durations.length) return null;
-  const idx = Math.ceil(q * durations.length) - 1;
-  return durations[Math.max(0, Math.min(idx, durations.length - 1))]!;
+// ===== Metrics =====
+const isFail = (r: RecWrap) =>
+  (r.msg && ERR.has(r.msg)) ||
+  (typeof r.status === 'number' && r.status >= 500);
+const isDQ = (r: RecWrap) => {
+  const ev = (r.event || r.msg || '').toLowerCase();
+  const et = (r.error_type || '').toLowerCase();
+  if (r.status && DQ_STATUS.has(r.status)) return true;
+  if (DQ_KEYWORDS.some((k) => ev.includes(k))) return true;
+  if (DQ_KEYWORDS.some((k) => et.includes(k))) return true;
+  return false;
 };
 
-// ===== 출력 =====
-console.log('\n=== 정확한 메트릭 결과 ===');
-console.log('--- Metrics for', MODE_ALL ? 'ALL PATHS' : targetArg, '---');
-console.log('batch_id:', batchIdArg);
-console.log('requested_count:', maxCount);
-console.log('actual_count:', total);
-console.log('errors:', errors);
-console.log(
-  'error_rate_pct:',
-  total ? ((100 * errors) / total).toFixed(2) : '0.00',
-);
-console.log('durations_collected:', durations.length);
-console.log('p50_ms:', pct(0.5) ?? '-');
-console.log('p95_ms:', pct(0.95) ?? '-');
-console.log('p99_ms:', pct(0.99) ?? '-');
+const total = selected.length;
+const errors = selected.filter(isFail).length;
+const errRate = total ? (errors / total) * 100 : 0;
+const availability = 100 - errRate;
 
-if (durations.length > 0) {
-  console.log('min_ms:', Math.min(...durations));
-  console.log('max_ms:', Math.max(...durations));
-  console.log(
-    'avg_ms:',
-    (durations.reduce((a, b) => a + b, 0) / durations.length).toFixed(2),
-  );
+const durations = selected
+  .map((r) => r.duration)
+  .filter((n): n is number => typeof n === 'number' && n > 0)
+  .sort((a, b) => a - b);
+const pct = (q: number) =>
+  durations.length
+    ? durations[
+        Math.max(
+          0,
+          Math.min(Math.ceil(q * durations.length) - 1, durations.length - 1),
+        )
+      ]
+    : null;
+const p95 = pct(0.95);
+
+const asc = [...selected].sort((a, b) => a.timestamp - b.timestamp);
+let openStart: number | null = null;
+const spans: number[] = [];
+for (const r of asc) {
+  const fail = isFail(r);
+  if (fail && openStart == null) openStart = r.timestamp;
+  else if (!fail && openStart != null) {
+    spans.push(r.timestamp - openStart);
+    openStart = null;
+  }
 }
+const mttrMin = spans.length
+  ? spans.reduce((a, b) => a + b, 0) / spans.length / 60000
+  : null;
 
-// ===== 디버깅 정보 =====
-if (selectedRecords.length > 0) {
-  const first = selectedRecords[selectedRecords.length - 1]; // 가장 오래된 것 (첫 번째)
-  const last = selectedRecords[0]; // 가장 최신 것 (마지막)
+const dqViolations = selected.filter(isDQ).length;
+const dqRate = total ? (dqViolations / total) * 100 : 0;
 
-  console.log('\n=== 시간 범위 ===');
-  console.log('첫 번째 요청:', new Date(first.timestamp).toISOString());
-  console.log('마지막 요청:', new Date(last.timestamp).toISOString());
-  console.log(
-    '총 소요 시간:',
-    ((last.timestamp - first.timestamp) / 1000).toFixed(1) + '초',
-  );
+// 날짜(최신 레코드 기준)
+const dayStr = dateStr(selected[0]?.timestamp ?? Date.now());
+
+// ===== Pretty Output =====
+const p95Str = p95 == null ? '-' : String(Math.round(p95));
+const mttrStr = mttrMin == null ? '-' : mttrMin.toFixed(2);
+
+console.log(`날짜 : ${dayStr}`);
+console.log(`전체 요청 : ${total}`);
+console.log(`실패(5xx/로직) : ${errors}`);
+console.log(`에러율% : ${errRate.toFixed(2)}`);
+console.log(`P95(ms) : ${p95Str}`);
+console.log(`가용성% : ${availability.toFixed(2)}`);
+console.log(`MTTR(분) : ${mttrStr}`);
+console.log(`DQ 위반율% : ${dqRate.toFixed(2)}`);
+
+if (VERBOSE) {
+  console.log('\n[debug]');
+  console.log('file:', normalizedFile);
+  console.log('target:', MODE_ALL ? 'ALL PATHS' : targetArg);
+  console.log('batch_id:', batchIdArg);
+  console.log('requested_count:', maxCount);
+  console.log('selected_count:', total);
+  if (total > 0) {
+    const first = asc[0],
+      last = asc[asc.length - 1];
+    console.log(
+      'time_window:',
+      new Date(first.timestamp).toISOString(),
+      '→',
+      new Date(last.timestamp).toISOString(),
+    );
+  }
 }
